@@ -13,6 +13,7 @@
     import Settings from "carbon-icons-svelte/lib/Settings.svelte"
     import Usb from "carbon-icons-svelte/lib/Usb.svelte"
     import LogoGithub from "carbon-icons-svelte/lib/LogoGithub.svelte"
+    import LogoDiscord from "carbon-icons-svelte/lib/LogoDiscord.svelte"
 
     import Button from "./Button.svelte";
     import Slider from "./Slider.svelte";
@@ -199,8 +200,8 @@
         </div>
 
         <div class="icon-button">
-            <div on:click={() => goto("https://github.com/Project-Amethyst/amethyst-player")}>
-                <LogoGithub size={32}></LogoGithub>
+            <div on:click={() => goto("https://discord.gg/Aw99cAgmDA")}>
+                <LogoDiscord size={32}></LogoDiscord>
             </div>
         </div>
     </div>
