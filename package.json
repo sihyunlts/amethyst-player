@@ -24,7 +24,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"carbon-icons-svelte": "^11.1.0",
+		"carbon-icons-svelte": "^11.4.0",
 		"howler": "^2.2.3",
 		"jszip": "^3.10.0",
 		"node-sass": "^7.0.1",
