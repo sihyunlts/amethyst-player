@@ -85,7 +85,9 @@
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
-                    <Button on:click={() => dispatch("loadProject")}>{$t('sidebar.load_project')}</Button>
+                    <div class={"load-project-button"} on:click={() => dispatch("loadProject")}>
+                        <span>{$t('sidebar.load_project')}</span>
+                    </div>
                 </div>
             </div>
         {/if}
@@ -134,7 +136,9 @@
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
-                    <Button on:click={() => dispatch("loadProject")}>{$t('sidebar.change_project')}</Button>
+                    <div class={"load-project-button"} on:click={() => dispatch("loadProject")}>
+                        <span>{$t('sidebar.load_project')}</span>
+                    </div>
                 </div>
             </div>
             
@@ -385,6 +389,38 @@
                     }
                 }
             }
+
+            .load-project-button
+            {
+                text-align: center; 
+                display: inline-flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+
+                padding: 5px 15px;
+                border-radius: 8px;
+
+                background-color: rgb(20, 20, 20);
+                border: 2px solid rgb(40, 40, 40);
+
+                span {
+                    font-family: "Roboto Mono", monospace;
+
+                    color: #dedede;
+                }
+
+                &:hover {
+                        background-color: rgb(10, 10, 10);
+                        border: 2px solid rgb(31, 31, 31);
+
+                        color: #c5c5c5;
+                    }
+
+                &:active {
+                    background-color: rgb(0,0,0);
+                }
+            }
         }
 
         .sidebar-block-demoplay {
@@ -465,6 +501,10 @@
                             border: 2px solid rgb(31, 31, 31);
 
                             color: #c5c5c5;
+                        }
+
+                        &:active {
+                            scale: 0.95;
                         }
                     }
                 }
