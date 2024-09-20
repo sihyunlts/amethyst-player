@@ -3,6 +3,7 @@
     "no_project_loaded": "No Project Loaded",
     "project_loading_in_progress": "Project Loading In Progress...",
     "load_project": "Load Project",
+    "load_new_project": "Load New Project",
     "change_project": "Change Project",
     "project_demoplay": "Project Demoplay"
 }

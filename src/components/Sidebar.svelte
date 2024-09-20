@@ -135,7 +135,7 @@
 
                 <div style="text-align: center; margin-top: 20px;">
                     <div class={"load-project-button"} on:click={() => dispatch("loadProject")}>
-                        <span>{$t('sidebar.load_project')}</span>
+                        <span>{$t('sidebar.load_new_project')}</span>
                     </div>
                 </div>
             </div>
