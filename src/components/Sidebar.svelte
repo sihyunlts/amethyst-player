@@ -5,7 +5,6 @@
     import Music from "carbon-icons-svelte/lib/Music.svelte"
     import MusicRemove from "carbon-icons-svelte/lib/MusicRemove.svelte"
     import InProgress from "carbon-icons-svelte/lib/InProgress.svelte"
-    import OverflowMenuVertical from "carbon-icons-svelte/lib/OverflowMenuVertical.svelte"
     import Pause from "carbon-icons-svelte/lib/Pause.svelte"
     import Play from "carbon-icons-svelte/lib/Play.svelte"
     import ChevronLeft from "carbon-icons-svelte/lib/ChevronLeft.svelte"
@@ -143,10 +142,11 @@
             
             {#if project?.demoplay !== undefined}
                 <div class="sidebar-block-demoplay">
-                    <div style="display: flex; color: gray; align-items: center; gap: 5px;" on:click={() => dispatch("demoplay")}>
-                        <span class="block-title">{$t('sidebar.project_demoplay')}</span>
-
-                        <OverflowMenuVertical style="margin-top: -10px;margin-left: -4px;" size={24}></OverflowMenuVertical>
+                    <div class="clickable-block-bar">
+                        <div style="display: flex; align-items: center; gap: 5px;" on:click={() => dispatch("demoplay")}>
+                            <span class="block-title">{$t('sidebar.project_demoplay')}</span>
+                            <Settings style="margin-top: -8px; margin-left: 4px;" size={22}></Settings>
+                        </div>
                     </div>
 
                     <div class="demoplay-time">
@@ -304,7 +304,7 @@
                 font-size: 18px;
                 color: #80D2E4;
 
-                transition: color 0.1s;
+                transition: color 0.3s ease;
 
                 cursor: pointer;
 
@@ -312,6 +312,16 @@
                     color: #5093a2;
                 }
             }
+
+            .block-bar-clickable
+            {
+                background-color: rgb(50, 50, 50);
+                transition: background-color 0.3s ease; /* Smooth transition */
+            }
+            .block-bar-clickable:hover {
+                background-color: rgb(10, 10, 10);
+            }
+
 
             .block-title {
                 font-family: 'Roboto', sans-serif;
@@ -403,6 +413,8 @@
                 background-color: rgb(20, 20, 20);
                 border: 2px solid rgb(40, 40, 40);
 
+                transition: background-color 0.3s ease, border 0.3s ease, color 0.3s ease;
+
                 span {
                     font-family: "Roboto Mono", monospace;
 
@@ -423,7 +435,7 @@
         }
 
         .sidebar-block-demoplay {
-            margin-top: 150px;
+            margin-top: min(50px, 30vh);
             height: 200px;
             padding: 20px;
 
@@ -432,13 +444,25 @@
             display: flex;
             flex-direction: column;
 
+            .clickable-block-bar
+            {
+                color: rgba(245, 245, 245, 0.52);
+
+                transition: color 0.3s ease;
+
+                cursor: pointer;
+
+                &:hover {
+                    color: #cbcbcb;
+                }
+            }
+
             .block-title {
                 font-family: 'Roboto', sans-serif;
                 font-style: normal;
                 font-weight: 300;
                 font-size: 20px;
 
-                color: rgba(245, 245, 245, 0.52);
                 margin-bottom: 10px;
             }
 
@@ -495,6 +519,8 @@
 
                         color: #d5d5d5;
 
+                        transition: background-color 0.3s ease, border 0.3s ease, color 0.3s ease;
+
                         &:hover {
                             background-color: rgb(10, 10, 10);
                             border: 2px solid rgb(31, 31, 31);
@@ -527,6 +553,14 @@
                 align-items: center;
 
                 color: grey;
+
+                transition: color 0.3s ease;
+
+                cursor: pointer;
+
+                &:hover {
+                    color: #cbcbcb;
+                }
             }
         }
     }
