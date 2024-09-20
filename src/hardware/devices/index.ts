@@ -6,7 +6,6 @@ import LaunchpadProMK2CFW from "./LaunchpadProMK2CFW";
 import LaunchpadProMK3 from "./LaunchpadProMK3";
 import LaunchpadMiniMK3 from "./LaunchpadMiniMK3";
 import MidiFighter64 from "./MidiFighter64";
-import TampoPadZ1 from "./TampoPadZ1";
 
 export default {
   [Mystrix.name]: Mystrix,
@@ -17,5 +16,4 @@ export default {
   [LaunchpadProMK3.name]: LaunchpadProMK3,
   [LaunchpadMiniMK3.name]: LaunchpadMiniMK3,
   [MidiFighter64.name]: MidiFighter64,
-  [TampoPadZ1.name]: TampoPadZ1,
 };
