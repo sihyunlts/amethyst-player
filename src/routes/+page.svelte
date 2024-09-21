@@ -28,7 +28,7 @@
 
     import {browser} from "$app/environment";
 
-    import { GoogleAnalytics } from '@beyonk/svelte-google-analytics'
+    import { GoogleAnalytics, ga } from '@beyonk/svelte-google-analytics'
 
     import {afterUpdate, onMount} from "svelte";
     import "../shared.css";
@@ -301,6 +301,11 @@
                 (result) => {
                     console.log("Project Loaded");
                     projectStatus = "loaded";
+                    ga.addEvent('project_loaded', {
+                        engine: settings.projectEngine,
+                        file_name: file.name,
+                        project_name: engine.projectInfo.name
+                    })
                 },
                 (error) => {
                     toast.push(
@@ -316,6 +321,11 @@
                         }
                     );
                     projectStatus = "not loaded";
+                    ga.addEvent('project_failed_to_load', {
+                        engine: settings.projectEngine,
+                        file_name: file?.name,
+                        error: error.toString()
+                    })
                 }
             );
             projectStatus = "loading";
