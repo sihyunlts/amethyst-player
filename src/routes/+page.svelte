@@ -74,8 +74,10 @@
     }
 
     let virtualDeviceComponent: typeof virtualDeviceComponents[number]["component"];
-    $: virtualDeviceComponent =
-        virtualDeviceComponents[settings.virtualDevice].component;
+    $: virtualDeviceComponent = 
+        virtualDeviceComponents[settings.virtualDevice] 
+            ? virtualDeviceComponents[settings.virtualDevice].component 
+            : virtualDeviceComponents["Mystrix"].component 
 
 
     let engine: ProjectRT;
