@@ -52,6 +52,17 @@
                 border-radius: 5px;
                 background-color: white;
                 cursor: pointer;
+                    
+                transition: left 0.3s ease; /* Adjust time and easing to your preference */
+                transform: all 0.3s ease; /* Adjust time and easing to your preference */
+
+                &:hover {
+                    transform: scale(1.2); 
+                }
+
+                &:active {
+                    transform: scale(1.1);
+                }
             }
 
             &::-moz-range-thumb {
@@ -60,6 +71,14 @@
                 border-radius: 5px;
                 background-color: white;
                 cursor: pointer;
+
+                &:hover {
+                    transform: scale(1.2); 
+                }
+
+                &:active {
+                    transform: scale(1.1);
+                }
             }
         }
 
