@@ -28,6 +28,8 @@
 
     import {browser} from "$app/environment";
 
+    import { GoogleAnalytics } from '@beyonk/svelte-google-analytics'
+
     import {afterUpdate, onMount} from "svelte";
     import "../shared.css";
 
@@ -468,6 +470,7 @@
 </script>
 
 <main>
+    <GoogleAnalytics properties={[ 'G-QQCVL9EZHF' ]} />
     <div class="toast {mobileView ? 'mobile': ''}">
         <SvelteToast options={{pausable: true, intro: mobileView ? { y: -192 } : undefined}}/>
     </div>

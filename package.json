@@ -12,6 +12,7 @@
 		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@beyonk/svelte-google-analytics": "^2.6.4",
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/kit": "^1.8.3",
 		"@types/howler": "^2.2.7",
