@@ -3,6 +3,7 @@
     "no_project_loaded": "当前无工程",
     "project_loading_in_progress": "工程加载中...",
     "load_project": "加载工程",
+    "load_new_project": "加载新工程",
     "change_project": "更换工程",
     "project_demoplay": "演示播放"
 }
