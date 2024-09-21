@@ -6,11 +6,11 @@ import Mystrix from "./Mystrix.svelte";
 
 
 export let virtualDeviceComponents : {[name:string]: any} = {
+  "Mystrix": { component: Mystrix },
   "Launchpad Pro MK2": { component: LaunchpadProMk2 },
   "Launchpad MK2": { component: LaunchpadMk2 },
   "Launchpad X": { component: LaunchpadX },
   "Launchpad Pro MK3": { component: LaunchpadProMk3 },
-  "Mystrix": { component: Mystrix }
 } as const;
 
 
