@@ -236,7 +236,7 @@ export function setColor(keyID: KeyID, color: Color) {
         width: 100%;
 
         display: flex;
-        // gap: 1.5%;
+        gap: 1.5%;
         flex-direction: column;
         padding: 3%;
 
@@ -260,8 +260,8 @@ export function setColor(keyID: KeyID, color: Color) {
                 padding: 0;
                 border: none;
 
-                height: 92%;
-                width: 92%;
+                height: 100%;
+                width: 100%;
                 border-radius: 10%;
                 background-color: rgb(80, 80, 80);
             }
