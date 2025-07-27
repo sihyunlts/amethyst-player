@@ -517,7 +517,7 @@
                 <div class="amethyst-player-content {mobileView ? 'mobile' : ''}" >
                     <div class="amethyst-player-launchpad-holder center-class">
                         <div
-                                style={`width: 85%; max-width: ${50 * parseInt(settings.virtualDeviceScale) / 100}vh;`}
+                                style={`width: 85%; max-width: ${50 * parseInt(settings.virtualDeviceScale) / 100}dvh;`}
                                 class="center-class"
                                 on:click={(e) => {e.stopPropagation()}}
                         >
@@ -821,8 +821,8 @@
 <style lang="scss">
     main {
         background-color: #1d1d1d;
-        height: 100vh;
-        width: 100vw;
+        height: 100dvh;
+        width: 100dvw;
 
         overflow: hidden;
     }
@@ -845,13 +845,13 @@
     }
 
     .amethyst-player-content {
-        height: calc(100vh - 100px);
+        height: calc(100dvh - 100px);
         width: 100%;
 
         overflow: auto;
 
         &.mobile{
-            height: calc(100vh - 160px);
+            height: calc(100dvh - 160px);
         }
 
         .amethyst-player-launchpad-holder {
@@ -960,7 +960,7 @@
 
         &.mobile
         {
-            --toastWidth: 100vw;
+            --toastWidth: 100dvw;
             --toastHeight: 4rem;
             --toastContainerTop: 0;
             --toastContainerLeft: 0;
