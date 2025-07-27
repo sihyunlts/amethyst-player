@@ -84,7 +84,7 @@
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
-                    <div class={"load-project-button"} on:click={() => dispatch("loadProject")}>
+                    <div class={"load-project-button sidebar-button"} on:click={() => dispatch("loadProject")}>
                         <span>{$t('sidebar.load_project')}</span>
                     </div>
                 </div>
@@ -146,7 +146,7 @@
                     <div class="clickable-block-bar">
                         <div style="display: flex; align-items: center; gap: 5px;" on:click={() => dispatch("demoplay")}>
                             <span class="block-title">{$t('sidebar.project_demoplay')}</span>
-                            <Settings style="margin-top: -8px; margin-left: 4px;" size={22}></Settings>
+                            <Settings class="demoplay-settings-gear" style="margin-top: -8px; margin-left: 4px;" size={22}></Settings>
                         </div>
                     </div>
 
@@ -191,13 +191,13 @@
     <div style="height: 100%"></div>
 
     <div class="sidebar-bottom-block">
-        <div class="icon-button">
+        <div class="icon-button" data-tutorial="settings">
             <div on:click={() => dispatch("settings")}>
                 <Settings size={32}></Settings>
             </div>
         </div>
 
-        <div class="icon-button">
+        <div class="icon-button" data-tutorial="devices">
             <div on:click={() => dispatch("devices")}>
                 <Usb size={36}></Usb>
             </div>

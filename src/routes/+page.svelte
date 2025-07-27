@@ -20,6 +20,9 @@
     import Switch from "../components/Switch.svelte";
     import MobileSidebarButton from "../components/MobileSidebarButton.svelte";
     import LayerSelector from "../components/LayerSelector.svelte";
+    import Tutorial from "../components/Tutorial.svelte";
+    import TutorialMobile from "../components/TutorialMobile.svelte";
+    import Help from "carbon-icons-svelte/lib/Help.svelte";
 
     import ResizeObserver from "svelte-resize-observer";
 
@@ -92,6 +95,22 @@
 
     let mobileView = false;
     let showSidebar = true;
+    let showTutorial = false;
+    let tutorialMode = false;
+    let fakeProjectInfo = null;
+    let fakeDemoplay = null;
+    let currentProject;
+    let currentStatus;
+    let currentStep = 0;
+    
+    $: currentProject = tutorialMode ? {
+        projectInfo: fakeProjectInfo, 
+        demoplay: fakeDemoplay, 
+        currentLayer: 0, 
+        LayerChange: () => {},
+        totalLayers: 8
+    } : engine;
+    $: currentStatus = tutorialMode && fakeProjectInfo ? "loaded" : projectStatus;
 
     const updateDevicesInfo = () => {
         virtualDevicesInfo = [];
@@ -267,6 +286,14 @@
                 }
                 popup["setting"] = !popup["setting"];
                 break;
+            case 72: // H - Show Tutorial
+                currentStep = 0;
+                tutorialMode = false;
+                fakeProjectInfo = null;
+                fakeDemoplay = null;
+                showSidebar = true;
+                showTutorial = true;
+                break;
             case 88: // X - Show Devices
                 if(popup["setting"] || popup["demoplay"]) 
                 {
@@ -331,6 +358,50 @@
             projectStatus = "loading";
         };
         input.click();
+    };
+
+    const showFakeProject = () => {
+        tutorialMode = true;
+        fakeProjectInfo = {
+            name: "Tutorial Demo",
+            author: "Amethyst Player",
+            version: "1.0",
+            layer: 8
+        };
+        
+        fakeDemoplay = {
+            status: "PAUSED",
+            progress: 25,
+            total: 100,
+            Start: () => {
+                fakeDemoplay.status = "PLAYING";
+                // Simple fake demo play simulation
+                const interval = setInterval(() => {
+                    if (fakeDemoplay.status === "PLAYING") {
+                        fakeDemoplay.progress++;
+                        if (fakeDemoplay.progress >= fakeDemoplay.total) {
+                            fakeDemoplay.progress = fakeDemoplay.total;
+                            fakeDemoplay.status = "PAUSED";
+                            clearInterval(interval);
+                        }
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 100);
+            },
+            Pause: () => {
+                fakeDemoplay.status = "PAUSED";
+            },
+            Seek: (position) => {
+                fakeDemoplay.progress = Math.max(0, Math.min(position, fakeDemoplay.total));
+            },
+            Next: () => {
+                fakeDemoplay.progress = Math.min(fakeDemoplay.progress + 10, fakeDemoplay.total);
+            },
+            Previous: () => {
+                fakeDemoplay.progress = Math.max(fakeDemoplay.progress - 10, 0);
+            }
+        };
     };
 
     let overlays:any[] = [];
@@ -409,6 +480,12 @@
     };
 
     if (browser) {
+        // Check if this is first time user
+        if (!localStorage.getItem("amethyst_tutorial_completed")) {
+            showSidebar = true;
+            showTutorial = true;
+        }
+
         if (localStorage.getItem("settings")) {
             settings = JSON.parse(localStorage.getItem("settings")!);
 
@@ -507,8 +584,8 @@
                     on:devices={() => (popup["devices"] = true)}
                     on:demoplay={() => (popup["demoplay"] = true)}
                     on:loadProject={() => {loadProject();}}
-                    bind:project={engine}
-                    bind:status={projectStatus}
+                    bind:project={currentProject}
+                    bind:status={currentStatus}
                     bind:show={showSidebar}
                     bind:mobile={mobileView}
             />
@@ -518,7 +595,7 @@
                     <div class="amethyst-player-launchpad-holder center-class">
                         <div
                                 style={`width: 85%; max-width: ${50 * parseInt(settings.virtualDeviceScale) / 100}dvh;`}
-                                class="center-class"
+                                class="center-class virtual-device-container"
                                 on:click={(e) => {e.stopPropagation()}}
                         >
                                 <svelte:component
@@ -533,8 +610,8 @@
                     </div>
                 </div>
                 <div class="amethyst-player-footer center-class" on:click={(e) => {e.stopPropagation()}}>
-                {#if projectStatus === "loaded"}
-                    <LayerSelector bind:project={engine}/>
+                {#if currentStatus === "loaded"}
+                    <LayerSelector bind:project={currentProject}/>
                 {:else}
                     <span title= {__BUILD_STRING__}>
                         {`Amethyst Player`}
@@ -546,7 +623,7 @@
     {/if}
 
     <Popup bind:mobile={mobileView} bind:show={popup["setting"]}>
-        <div class="settings-popup">
+        <div class="settings-popup" data-tutorial="settings">
             <div class="popup-header center-class">
                 <span>{$t("setting.settings")}</span>
             </div>
@@ -612,11 +689,32 @@
                     />
                 </div>
             </div>
+
+            <div class="setting {mobileView? 'mobile' : ''}">
+                <div class="setting-name">
+                    <span>{$t('tutorial.help_and_tutorial')}</span>
+                </div>
+
+                <div class="setting-option">
+                    <div class="help-button" on:click={() => { 
+                        popup["setting"] = false; 
+                        currentStep = 0; 
+                        tutorialMode = false;
+                        fakeProjectInfo = null;
+                        fakeDemoplay = null;
+                        showSidebar = true;
+                        showTutorial = true; 
+                    }}>
+                        <Help size={20} />
+                        <span>{$t('tutorial.show_tutorial')}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </Popup>
 
     <Popup bind:mobile={mobileView} bind:show={popup["devices"]}>
-        <div class="settings-popup">
+        <div class="settings-popup" data-tutorial="devices">
             <div class="popup-header center-class">
                 <span>{$t("device.device")}</span>
             </div>
@@ -747,7 +845,7 @@
     </Popup>
 
     <Popup bind:mobile={mobileView} bind:show={popup["demoplay"]}>
-        <div class="settings-popup">
+        <div class="settings-popup" data-tutorial="demoplay">
             <div class="popup-header center-class">
                 <span>{$t("demoplay.demoplay")}</span>
             </div>
@@ -816,6 +914,46 @@
             </div>
         </div>
     </Popup>
+
+    {#if mobileView}
+        <TutorialMobile 
+            bind:show={showTutorial} 
+            bind:currentStep={currentStep}
+            on:close={() => {
+                localStorage.setItem("amethyst_tutorial_completed", "true");
+                showTutorial = false;
+                // Clean up tutorial mode
+                tutorialMode = false;
+                fakeProjectInfo = null;
+                fakeDemoplay = null;
+                currentStep = 0;
+            }}
+            on:openSettings={() => { popup["setting"] = true; }}
+            on:openDevices={() => { popup["devices"] = true; }}
+            on:openDemoplay={() => { popup["demoplay"] = true; }}
+            on:showFakeProject={() => { showFakeProject(); }}
+            on:hideSidebar={() => { showSidebar = false; }}
+            on:showSidebar={() => { showSidebar = true; }}
+        />
+    {:else}
+        <Tutorial 
+            bind:show={showTutorial} 
+            bind:currentStep={currentStep}
+            on:close={() => {
+                localStorage.setItem("amethyst_tutorial_completed", "true");
+                showTutorial = false;
+                // Clean up tutorial mode
+                tutorialMode = false;
+                fakeProjectInfo = null;
+                fakeDemoplay = null;
+                currentStep = 0;
+            }}
+            on:openSettings={() => { popup["setting"] = true; }}
+            on:openDevices={() => { popup["devices"] = true; }}
+            on:openDemoplay={() => { popup["demoplay"] = true; }}
+            on:showFakeProject={() => { showFakeProject(); }}
+        />
+    {/if}
 </main>
 
 <style lang="scss">
@@ -943,6 +1081,31 @@
                     width: 100%;
                     flex-direction: row;
                 }
+            }
+        }
+
+        .help-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: "Roboto Mono", sans-serif;
+            font-size: 14px;
+
+            &:hover {
+                background-color: #333;
+                border-color: #555;
+                color: #fff;
+            }
+
+            &:active {
+                background-color: #1a1a1a;
             }
         }
     }
