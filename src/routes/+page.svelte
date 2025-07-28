@@ -1102,9 +1102,9 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 6px;
+            background-color: rgb(20, 20, 20);
+            border: 2px solid rgb(50, 50, 50);
+            border-radius: 8px;
             color: #e0e0e0;
             cursor: pointer;
             transition: all 0.2s;
