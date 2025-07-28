@@ -83,10 +83,16 @@
                         </div>
                     </div>
                 </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <div class={"load-project-button sidebar-button"} on:click={() => dispatch("loadProject")}>
-                        <span>{$t('sidebar.load_project')}</span>
+                <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; align-items: center;">
+                    <div class={"load-project-button sidebar-button"} style="flex: 1;" on:click={() => dispatch("loadProject")}>
+                        <span>{$t('sidebar.local_project')}</span>
                     </div>
+                    <div class={"load-project-button project-store-button sidebar-button"} style="flex: 1;" on:click={() => dispatch("openProjectStore")}>
+                        <span>{$t('sidebar.project_store')}</span>
+                    </div>
+                    <!-- <div class={"load-project-button sidebar-button"} style="flex: 1;" on:click={() => dispatch("openDownloadedProjects")}>
+                        <span>{$t('sidebar.downloaded_projects')}</span>
+                    </div> -->
                 </div>
             </div>
         {/if}
@@ -134,10 +140,16 @@
                     </div>
                 </div>
 
-                <div style="text-align: center; margin-top: 20px;">
-                    <div class={"load-project-button"} on:click={() => dispatch("loadProject")}>
-                        <span>{$t('sidebar.load_new_project')}</span>
+                <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; align-items: center;">
+                    <div class={"load-project-button"} style="flex: 1;" on:click={() => dispatch("loadProject")}>
+                        <span>{$t('sidebar.local_project')}</span>
                     </div>
+                    <div class={"load-project-button project-store-button"} style="flex: 1;" on:click={() => dispatch("openProjectStore")}>
+                        <span>{$t('sidebar.project_store')}</span>
+                    </div>
+                    <!-- <div class={"load-project-button"} style="flex: 1;" on:click={() => dispatch("openDownloadedProjects")}>
+                        <span>{$t('sidebar.downloaded_projects')}</span>
+                    </div> -->
                 </div>
             </div>
             

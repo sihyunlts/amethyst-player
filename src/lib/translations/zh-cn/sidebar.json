@@ -5,5 +5,16 @@
     "load_project": "加载工程",
     "load_new_project": "加载新工程",
     "change_project": "更换工程",
-    "project_demoplay": "演示播放"
+    "project_demoplay": "演示播放",
+    "project_store": "工程商店",
+    "project_store_title": "工程商店 (Beta)",
+    "local_project": "本地工程",
+    "downloaded_projects": "已下载工程",
+    "sort_by_latest": "按最新排序",
+    "sort_by_most_downloaded": "按下载量排序",
+    "search_projects": "搜索工程...",
+    "downloads": "下载",
+    "download": "下载",
+    "downloading": "下载中",
+    "complete": "完成！"
 }

@@ -20,8 +20,8 @@
         const step = steps[stepIndex];
         console.log('Step transition:', stepIndex, step.title, step.highlight);
         
-        // Show fake loaded project UI after "Load Your First Project" step
-        if (stepIndex === 2) { // After step 1 (Load Your First Project)
+        // Show fake loaded project UI after "Project Store" step
+        if (stepIndex === 3) { // After step 2 (Project Store)
             dispatch('showFakeProject');
         }
         
@@ -48,7 +48,13 @@
         {
             title: $t('tutorial.load_project_title'),
             content: $t('tutorial.load_project_content'),
-            highlight: ".sidebar-button",
+            highlight: ".load-project-button",
+            position: "right"
+        },
+        {
+            title: $t('tutorial.project_store_title'),
+            content: $t('tutorial.project_store_content'),
+            highlight: ".project-store-button",
             position: "right"
         },
         {

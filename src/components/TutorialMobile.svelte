@@ -20,17 +20,17 @@
         console.log('Mobile step transition:', stepIndex, step.title, step.highlight);
         
         // Show fake loaded project UI after "Load Your First Project" step
-        if (stepIndex === 2) { // After step 1 (Load Your First Project)
+        if (stepIndex === 3) { // After step 1 (Load Your First Project)
             dispatch('showFakeProject');
         }
         
         // Hide sidebar for Virtual Device Display step (step index 6)
-        if (stepIndex === 6) {
+        if (stepIndex === 7) {
             dispatch('hideSidebar');
         }
         
         // Show sidebar back after Return to Sidebar step (step index 8)
-        if (stepIndex === 8) {
+        if (stepIndex === 9) {
             dispatch('showSidebar');
         }
         
@@ -39,12 +39,12 @@
         const returnToSidebarStepIndex = 8; // "Return to Sidebar" step
         
         // If going back from Return to Sidebar to Layer Navigation, hide sidebar again
-        if (stepIndex === 7 && stepIndex === virtualDeviceStepIndex + 1) { // Layer Navigation step is index 7
+        if (stepIndex === 8 && stepIndex === virtualDeviceStepIndex + 1) { // Layer Navigation step is index 7
             dispatch('hideSidebar');
         }
         
         // If going back from Virtual Device Display to Toggle Sidebar, show sidebar
-        if (stepIndex === 5 && stepIndex === virtualDeviceStepIndex - 1) { // Toggle Sidebar step is index 5
+        if (stepIndex === 6 && stepIndex === virtualDeviceStepIndex - 1) { // Toggle Sidebar step is index 5
             dispatch('showSidebar');
         }
         
@@ -71,8 +71,14 @@
         {
             title: $t('tutorial.load_project_title'),
             content: $t('tutorial.load_project_content_mobile'),
-            highlight: ".sidebar-button",
+            highlight: ".load-project-button",
             position: "bottom"
+        },
+        {
+            title: $t('tutorial.project_store_title'),
+            content: $t('tutorial.project_store_content'),
+            highlight: ".project-store-button",
+            position: "right"
         },
         {
             title: $t('tutorial.project_info_title'),

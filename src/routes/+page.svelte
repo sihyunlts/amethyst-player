@@ -238,6 +238,10 @@
     const onKeyDown = (e: KeyboardEvent) => {
         if(e.repeat) return;
 
+        // Check if any popup is open - if so, don't process keyboard shortcuts
+        const anyPopupOpen = Object.values(popup).some(isOpen => isOpen);
+        if (anyPopupOpen) return;
+
         var keyCode = e.keyCode;
         
         // Layer shortcuts (0-9) only work when project is loaded
@@ -334,38 +338,86 @@
         input.accept = engine.fileFormat;
         input.onchange = (e) => {
             var file = e?.target?.files[0];
-            engine.LoadProjectFile(file).then(
-                (result) => {
-                    console.log("Project Loaded");
-                    projectStatus = "loaded";
-                    ga.addEvent('project_loaded', {
-                        engine: settings.projectEngine,
-                        file_name: file.name,
-                        project_name: engine.projectInfo.name
-                    })
-                },
-                (error) => {
-                    toast.push(
-                        $t("toast.project_failed_to_load", {project_loading_error: error.toString()}
-                        ),
-                        {
-                            theme: {
-                                "--toastColor": "#FFFFFF;",
-                                "--toastBackground": "#F56565",
-                                "--toastBarBackground": "#C53030",
-                            },
-                            duration: 5000
-                        }
-                    );
-                    projectStatus = "not loaded";
-                    ga.addEvent('project_failed_to_load', {
-                        engine: settings.projectEngine,
-                        file_name: file?.name,
-                        error: error.toString()
-                    })
+            loadProjectFile(file);
+        };
+        input.click();
+    };
+
+    const loadProjectFile = async (file: File, saveToCache: boolean = false) => {
+        if (!file) return;
+        
+        projectStatus = "loading";
+        
+        try {
+            await engine.LoadProjectFile(file);
+            console.log("Project Loaded");
+            projectStatus = "loaded";
+            
+            // Save to cache if requested (for imported projects)
+            if (saveToCache) {
+                const { downloadedProjectsService } = await import('../lib/services/downloadedProjects');
+                await downloadedProjectsService.addDownloadedProject(
+                    `local_${Date.now()}`, // Generate unique ID for local imports
+                    engine.projectInfo.name,
+                    engine.projectInfo.author || 'Unknown',
+                    file
+                );
+                console.log("Project cached locally");
+            }
+            
+            ga.addEvent('project_loaded', {
+                engine: settings.projectEngine,
+                file_name: file.name,
+                project_name: engine.projectInfo.name,
+                source: saveToCache ? 'local_import' : 'local_direct'
+            });
+        } catch (error) {
+            toast.push(
+                $t("toast.project_failed_to_load", {project_loading_error: error.toString()}
+                ),
+                {
+                    theme: {
+                        "--toastColor": "#FFFFFF;",
+                        "--toastBackground": "#F56565",
+                        "--toastBarBackground": "#C53030",
+                    },
+                    duration: 5000
                 }
             );
-            projectStatus = "loading";
+            projectStatus = "not loaded";
+            ga.addEvent('project_failed_to_load', {
+                engine: settings.projectEngine,
+                file_name: file?.name,
+                error: error.toString()
+            });
+        }
+    };
+
+    const handleProjectStoreSelection = (event: CustomEvent) => {
+        const { file, projectInfo } = event.detail;
+        popup["projectStore"] = false;
+        
+        console.log("Project selected from store:", projectInfo.name);
+        loadProjectFile(file);
+        
+        ga.addEvent('project_loaded_from_store', {
+            engine: settings.projectEngine,
+            project_id: projectInfo.id,
+            project_name: projectInfo.name,
+            project_author: projectInfo.author
+        });
+    };
+
+    const importProject = () => {
+        console.log("Import Project - File Selector");
+        var input = document.createElement("input");
+        input.type = "file";
+        input.accept = engine.fileFormat;
+        input.onchange = (e) => {
+            var file = e?.target?.files[0];
+            if (file) {
+                loadProjectFile(file, true); // true = save to cache
+            }
         };
         input.click();
     };
@@ -603,6 +655,8 @@
                     on:devices={() => (popup["devices"] = true)}
                     on:demoplay={() => (popup["demoplay"] = true)}
                     on:loadProject={() => {loadProject();}}
+                    on:openProjectStore={() => (popup["projectStore"] = true)}
+                    on:openDownloadedProjects={() => (popup["downloadedProjects"] = true)}
                     bind:project={currentProject}
                     bind:status={currentStatus}
                     bind:show={showSidebar}
@@ -950,6 +1004,30 @@
             </div>
         </div>
     </Popup>
+
+    {#if popup["projectStore"]}
+        {#await import("../components/ProjectStore.svelte") then ProjectStoreModule}
+            <ProjectStoreModule.default 
+                bind:show={popup["projectStore"]}
+                on:projectSelected={handleProjectStoreSelection}
+                on:close={() => popup["projectStore"] = false}
+            />
+        {/await}
+    {/if}
+
+    {#if popup["downloadedProjects"]}
+        {#await import("../components/DownloadedProjects.svelte") then DownloadedProjectsModule}
+            <DownloadedProjectsModule.default 
+                bind:show={popup["downloadedProjects"]}
+                on:projectSelected={handleProjectStoreSelection}
+                on:importProject={() => {
+                    popup["downloadedProjects"] = false;
+                    importProject();
+                }}
+                on:close={() => popup["downloadedProjects"] = false}
+            />
+        {/await}
+    {/if}
 
     {#if mobileView}
         <TutorialMobile 
