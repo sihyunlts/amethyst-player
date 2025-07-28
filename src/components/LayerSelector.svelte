@@ -62,13 +62,17 @@
 
 <style lang="scss">
     .layer-selector-container {
+        width: 100%;
+        max-width: 100%;
+        
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 1em;
+        gap: min(1em, 8px);
         // filter: drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.25));
 
         .layer-control {
+            min-width: 36px;
             width: 36px;
             height: 36px;
             display: flex;
@@ -96,16 +100,17 @@
         }
 
         .layers-container {
-            min-width: fit-content;
-            max-width: calc(80px * 6 + 0.5em * 5);
+            min-width: 0;
+            flex: 1;
+            max-width: min(calc(80px * 6 + 0.5em * 5), calc(100% - 72px - 16px));
             display: flex;
             justify-content: center;
-            grid-template-columns: repeat(auto-fit, 80px);
             gap: 0.5em;
 
             overflow: hidden;
 
             .layer {
+                min-width: 30px;
                 width: 40px;
                 height: 40px;
 
@@ -116,7 +121,7 @@
                 justify-content: center;
                 align-items: center;
 
-                flex-shrink: 0;
+                flex-shrink: 1;
                 
                 transition: background-color 0.2s ease, width 0.2s ease;
 
@@ -128,12 +133,12 @@
 
                 &:hover {
                     background-color: #141414;
-                    width: 50px;
+                    width: min(50px, 100%);
                 }
 
                 &.selected {
                     background-color: #141414;
-                    width: 80px;
+                    width: min(80px, 100%);
                     span {
                         color: #c5c5c5;
                         font-family: Inter, sans-serif;

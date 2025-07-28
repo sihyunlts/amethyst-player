@@ -22,27 +22,27 @@
             dispatch('showFakeProject');
         }
         
-        // Hide sidebar for Virtual Device Display step
-        if (step.title === "Virtual Device Display") {
+        // Hide sidebar for Virtual Device Display step (step index 6)
+        if (stepIndex === 6) {
             dispatch('hideSidebar');
         }
         
-        // Show sidebar back after Return to Sidebar step
-        if (step.title === "Return to Sidebar") {
+        // Show sidebar back after Return to Sidebar step (step index 8)
+        if (stepIndex === 8) {
             dispatch('showSidebar');
         }
         
-        // Handle reverse navigation based on current and previous step state
-        const virtualDeviceStepIndex = steps.findIndex(s => s.title === "Virtual Device Display");
-        const returnToSidebarStepIndex = steps.findIndex(s => s.title === "Return to Sidebar");
+        // Handle reverse navigation based on step indices
+        const virtualDeviceStepIndex = 6; // "Virtual Device Display" step
+        const returnToSidebarStepIndex = 8; // "Return to Sidebar" step
         
         // If going back from Return to Sidebar to Layer Navigation, hide sidebar again
-        if (step.title === "Layer Navigation" && stepIndex === virtualDeviceStepIndex + 1) {
+        if (stepIndex === 7 && stepIndex === virtualDeviceStepIndex + 1) { // Layer Navigation step is index 7
             dispatch('hideSidebar');
         }
         
         // If going back from Virtual Device Display to Toggle Sidebar, show sidebar
-        if (step.title === "Toggle Sidebar" && stepIndex === virtualDeviceStepIndex - 1) {
+        if (stepIndex === 5 && stepIndex === virtualDeviceStepIndex - 1) { // Toggle Sidebar step is index 5
             dispatch('showSidebar');
         }
         
