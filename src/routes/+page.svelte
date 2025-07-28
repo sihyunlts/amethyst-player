@@ -238,8 +238,11 @@
         if(e.repeat) return;
 
         var keyCode = e.keyCode;
+        
+        // Layer shortcuts (0-9) only work when project is loaded
         if(keyCode > 47 && keyCode < 58) // 0-9
         {
+            if(currentStatus !== "loaded") return;
             var layer = keyCode == 48 ? 9 : keyCode - 49;
             engine?.LayerChange(layer);
             return
@@ -248,26 +251,31 @@
         switch(keyCode) {
             case 32: // Space
             case 80: // P
+                if(currentStatus !== "loaded") return;
                 engine?.demoplay?.status === "PLAYING" ? engine?.demoplay?.Pause() : engine?.demoplay?.Start();
                 break;
             case 37: // Left - Previous Action
             case 65: // A
+                if(currentStatus !== "loaded") return;
                 engine?.demoplay?.Pause();
                 engine?.demoplay?.Previous();
                 break;
             case 39: // Right - Next Action
             case 68: // D
+                if(currentStatus !== "loaded") return;
                 engine?.demoplay?.Pause();
                 engine?.demoplay?.Next();
                 break;
             case 38: // Up - Layer Down
             case 87: // W
             case 69: // E
+                if(currentStatus !== "loaded") return;
                 engine?.LayerChange(engine?.currentLayer + 1);
                 break;
             case 40: // Down - Layer Up
             case 83: // S
             case 81: // Q
+                if(currentStatus !== "loaded") return;
                 engine?.LayerChange(engine?.currentLayer - 1);
                 break;
             case 70: // F - Full Screen
@@ -303,6 +311,7 @@
                 popup["devices"] = !popup["devices"];
                 break;
             case 67: // C - Show Demo Play Settings
+                if(currentStatus !== "loaded") return;
                 if(popup["setting"] || popup["devices"]) 
                 {
                     popup["setting"] = false;
@@ -552,6 +561,10 @@
         if(newMobileView != mobileView)
         {
             mobileView = newMobileView;
+            // Ensure sidebar is shown when switching to mobile view
+            if(newMobileView) {
+                showSidebar = true;
+            }
         }
     }
 </script>

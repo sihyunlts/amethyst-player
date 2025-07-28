@@ -32,7 +32,7 @@
     export let mobile:boolean;
     let animation:boolean = false;
     let animationChangeCount: number = 0;
-    $:{mobile, (() => {animationChangeCount = -1; show = !mobile})()}
+    $:{mobile, (() => {animationChangeCount = -1; show = true})()}
     $:{show, (async() => {
         if(animationChangeCount == -1){animationChangeCount++; return;}
         animation = true; let localAnimationChangeCount = ++animationChangeCount; 

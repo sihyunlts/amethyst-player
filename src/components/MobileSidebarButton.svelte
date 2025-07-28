@@ -1,5 +1,5 @@
 <script>
-    export let checked = false;
+    export let checked = true;
 </script>
 
 <div class="button-body {checked? 'active' : ''}" on:click={() => checked = !checked}>
