@@ -64,7 +64,7 @@ export function setColor(keyID: KeyID, color: Color) {
         }
         let index = getKeypadIndex(keyID)
         if(keyPads[index]) {
-            var screen_color = color.overlay(new Color(ColorType.RGB, [80, 80, 80]));
+            var screen_color = color.overlay(new Color(ColorType.RGB, [0x80, 0x80, 0x80]));
             keyPads[index].set_color(screen_color);           
         }
     }
@@ -92,9 +92,9 @@ export function setColor(keyID: KeyID, color: Color) {
 
 <style lang="scss">
     .lp-border {
-        background: rgb(20, 20, 20);
-        border: 2px solid rgb(120, 120, 120);
-        border-radius: 4%;
+        background: var(--device-body);
+        border: 2px solid var(--device-border);
+        border-radius: 3%;
 
         position: relative;
 
@@ -130,7 +130,7 @@ export function setColor(keyID: KeyID, color: Color) {
                 height: 90%;
                 width: 90%;
                 border-radius: 50%;
-                background-color: rgb(80, 80, 80);
+                background-color: var(--device-button);
 
                 &::after {
                     content: "";
@@ -142,7 +142,7 @@ export function setColor(keyID: KeyID, color: Color) {
                     
                     padding: 3px;
                     background-clip: content-box;
-                    background-color: rgb(10, 10, 10);
+                    background-color: var(--device-button-overlay);
                     border-radius: 50%;
                 }
             }
@@ -154,7 +154,7 @@ export function setColor(keyID: KeyID, color: Color) {
                 height: 92%;
                 width: 92%;
                 border-radius: 10%;
-                background-color: rgb(80, 80, 80);
+                background-color: var(--device-button);
             }
         }
     }

@@ -66,7 +66,7 @@
         }
         let index = getKeypadIndex(keyID)
         if(keyPads[index]) {
-            var screen_color = color.overlay(new Color(ColorType.RGB, [80, 80, 80]));
+            var screen_color = color.overlay(new Color(ColorType.RGB, [0x80, 0x80, 0x80]));
             keyPads[index].set_color(screen_color);           
         }
     }
@@ -110,8 +110,8 @@
 
 <style lang="scss">
     .lp-border {
-        background: rgb(20, 20, 20);
-        border: 2px solid rgb(120, 120, 120);
+        background: var(--device-body);
+        border: 2px solid var(--device-border);
         border-radius: 2%;
 
         position: relative;
@@ -147,7 +147,7 @@
                 height: 90%;
                 width: 90%;
                 border-radius: 8%;
-                background-color: rgb(80, 80, 80);
+                background-color: var(--device-button);
 
                 &::after {
                     content: "";
@@ -159,7 +159,7 @@
                     
                     padding: 2px;
                     background-clip: content-box;
-                    background-color: rgb(10, 10, 10);
+                    background-color: var(--device-button-overlay);
                     border-radius: 8%;
                 }
             }
@@ -171,7 +171,7 @@
                 height: 90%;
                 width: 90%;
                 border-radius: 8%;
-                background-color: rgb(5, 5, 5);
+                background-color: var(--device-border);
 
                 display: flex;
                 justify-content: center;
@@ -181,7 +181,7 @@
                     width: 85%;
                     height: 85%;
 
-                    background-color: rgb(80, 80, 80);
+                    background-color: var(--device-button);
                     border-radius: 5%;
                     overflow: hidden;
 
@@ -199,7 +199,7 @@
                             align-items: center;
 
                             :global(.top-part) {
-                                background-color: black;
+                                background-color: var(--device-part);
                                 margin-top: 10%;
 
                                 height: 60%;
@@ -207,7 +207,7 @@
                             }
 
                             :global(.bottom-part) {
-                                background-color: black;
+                                background-color: var(--device-part);
                                 margin-bottom: 10%;
 
                                 height: 60%;
@@ -224,7 +224,7 @@
                 height: 90%;
                 width: 90%;
                 border-radius: 8%;
-                background-color: rgb(80, 80, 80);
+                background-color: var(--device-button);
             }
 
         }

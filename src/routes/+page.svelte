@@ -28,6 +28,7 @@
 
     import {SvelteToast, toast} from "@zerodevx/svelte-toast";
     import {t, locale, locales} from "$lib/translations";
+    import { themeMode, theme } from "$lib/stores/theme";
 
     import {browser} from "$app/environment";
 
@@ -553,6 +554,11 @@
         updateDevicesInfo();
     });
 
+    // Update body theme attribute
+    $: if (browser && $theme) {
+        document.body.setAttribute('data-theme', $theme);
+    }
+
     function onResize(e) {
         let width = e.detail.clientWidth;
         let height = e.detail.clientHeight;
@@ -698,6 +704,23 @@
                         on:change={(e) => {
                         $locale = $locales[e.detail.index];
                         settings.language = $locales[e.detail.index];
+                        }}
+                    />
+                </div>
+            </div>
+
+            <div class="setting {mobileView? 'mobile' : ''}">
+                <div class="setting-name">
+                    <span>{$t("setting.theme") + ":"}</span>
+                </div>
+
+                <div class="setting-option">
+                    <Dropdown
+                        value={$themeMode === 'auto' ? $t('setting.theme_auto') : $themeMode === 'light' ? $t('setting.theme_light') : $t('setting.theme_dark')}
+                        options={[$t('setting.theme_auto'), $t('setting.theme_light'), $t('setting.theme_dark')]}
+                        on:change={(e) => {
+                            const themes = ['auto', 'light', 'dark'];
+                            $themeMode = themes[e.detail.index];
                         }}
                     />
                 </div>
@@ -970,11 +993,13 @@
 </main>
 
 <style lang="scss">
+    // Theme colors are now managed by the centralized theme system in lib/theme/
+
     main {
-        background-color: #1d1d1d;
+        background-color: var(--bg2, #ffffff);
         height: 100dvh;
         width: 100dvw;
-
+        color: var(--text1);
         overflow: hidden;
     }
 
@@ -998,6 +1023,7 @@
     .amethyst-player-content {
         height: calc(100dvh - 100px);
         width: 100%;
+        background-color: var(--bg2, #ffffff);
 
         overflow: auto;
 
@@ -1014,7 +1040,7 @@
                 font-style: normal;
                 font-weight: 300;
                 font-size: 20px;
-                color: rgba(245, 245, 245, 0.52);
+                color: var(--text2);
             }
         }
     }
@@ -1029,14 +1055,14 @@
             font-size: 18px;
 
             font-family: "Roboto Mono", sans-serif;
-            color: #969696;
+            color: var(--text2);
             font-weight: 300;
 
             a {
-                color: aqua;
+                color: var(--selected);
 
                 &:hover {
-                    color: #0ec0c0;
+                    color: var(--text1);
                 }
             }
         }
@@ -1052,7 +1078,7 @@
             font-size: 26px;
 
             font-family: "Roboto Mono", sans-serif;
-            color: whitesmoke;
+            color: var(--text1);
             font-weight: 300;
 
             margin-bottom: 20px;
@@ -1069,7 +1095,7 @@
                 display: flex;
                 align-items: center;
 
-                color: whitesmoke;
+                color: var(--text1);
 
                 font-family: "Roboto Mono", sans-serif;
                 font-weight: 400;
@@ -1098,27 +1124,36 @@
         }
 
         .help-button {
-            display: flex;
+            display: flex !important;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background-color: rgb(20, 20, 20);
-            border: 2px solid rgb(50, 50, 50);
+            background-color: var(--bg1) !important;
+            border: 2px solid var(--bg4) !important;
             border-radius: 8px;
-            color: #e0e0e0;
+            color: var(--text1) !important;
             cursor: pointer;
             transition: all 0.2s;
-            font-family: "Roboto Mono", sans-serif;
-            font-size: 14px;
+            font-family: "Roboto Mono", sans-serif !important;
+            font-size: 14px !important;
+            text-decoration: none;
+            outline: none;
 
             &:hover {
-                background-color: #333;
-                border-color: #555;
-                color: #fff;
+                background-color: var(--bg3) !important;
+                border-color: var(--bg4) !important;
+                color: var(--text1) !important;
             }
 
             &:active {
-                background-color: #1a1a1a;
+                background-color: var(--bg4) !important;
+                color: var(--text1) !important;
+            }
+
+            span {
+                color: var(--text1) !important;
+                font-family: "Roboto Mono", sans-serif !important;
+                font-size: 14px !important;
             }
         }
     }
@@ -1130,9 +1165,9 @@
         font-size: 16px;
         font-weight: 300;
         --toastWidth: 20rem;
-        --toastColor: #cbcbcb;
-        --toastBackground: #141414;
-        --toastBarBackground: #3e3e3e;
+        --toastColor: var(--text1);
+        --toastBackground: var(--bg3);
+        --toastBarBackground: var(--bg4);
 
         &.mobile
         {
@@ -1146,7 +1181,7 @@
     .mobile-header {
         height: 60px;
 
-        background-color: rgb(20, 20, 20);
+        background-color: var(--bg-secondary);
 
         .show-controls-icon-parent {
             position: fixed;
@@ -1172,7 +1207,7 @@
                 font-size: 22px;
 
                 letter-spacing: 0.125rem;
-                color: #f5f5f5;
+                color: var(--text1);
             }
         }
     }

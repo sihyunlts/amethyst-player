@@ -22,7 +22,7 @@
 
             width: 36px;
             height: 3px;
-            background: #f5f5f5;
+            background: var(--text1);
 
             transition: transform 0.2s ease-in-out, margin-bottom 0.2s ease-in-out, margin-top 0.2s ease-in-out;
         }

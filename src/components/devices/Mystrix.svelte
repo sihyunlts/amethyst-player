@@ -83,7 +83,7 @@ export function setColor(keyID: KeyID, color: Color) {
             if(underglow) {
                 screen_color = color.rgba();
             } else {
-                screen_color = color.overlay(new Color(ColorType.RGB, [80, 80, 80]));
+                screen_color = color.overlay(new Color(ColorType.RGB, [0x80, 0x80, 0x80]));
             }
             keyPads[index].set_color(screen_color);           
         }
@@ -154,8 +154,8 @@ export function setColor(keyID: KeyID, color: Color) {
     }
 
     .lp-border {
-        background-color: rgb(20, 20, 20);
-        border: 2px solid rgb(120, 120, 120);
+        background-color: var(--device-body);
+        border: 2px solid var(--device-border);
         border-radius: 3%;
 
         position: absolute;
@@ -263,7 +263,7 @@ export function setColor(keyID: KeyID, color: Color) {
                 height: 100%;
                 width: 100%;
                 border-radius: 10%;
-                background-color: rgb(80, 80, 80);
+                background-color: var(--device-button);
             }
 
         }

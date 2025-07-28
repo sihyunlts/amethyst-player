@@ -6,12 +6,14 @@
     import Close from "carbon-icons-svelte/lib/Close.svelte";
     import Information from "carbon-icons-svelte/lib/Information.svelte";
     import { t } from '$lib/translations';
+    import { theme } from '$lib/stores/theme';
 
     const dispatch = createEventDispatcher();
 
     export let show = false;
     export let currentStep = 0;
     export let mobile = false;
+    
     
     // Function to help with popup-dependent steps
     function handleStepTransition(stepIndex) {
@@ -288,7 +290,7 @@
 
 {#if show}
     <div 
-        class="tutorial-overlay" 
+        class="tutorial-overlay theme-{$theme}" 
         bind:this={tutorialOverlay}
         transition:fade={{ duration: 300 }}
     >
@@ -308,7 +310,7 @@
 
         <!-- Tutorial tooltip -->
         <div 
-            class="tutorial-tooltip"
+            class="tutorial-tooltip theme-{$theme}"
             style="
                 top: {tooltipStyle.top};
                 left: {tooltipStyle.left};
@@ -410,6 +412,13 @@
         z-index: 10002;
         font-family: "Roboto Mono", sans-serif;
 
+        // Light theme
+        &.theme-light {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
         // Mobile styles
         @media (max-width: 800px) {
             position: fixed;
@@ -426,6 +435,10 @@
         align-items: center;
         padding: 16px 20px 12px;
         border-bottom: 1px solid #333;
+
+        .theme-light & {
+            border-bottom: 1px solid #e0e0e0;
+        }
     }
 
     .tutorial-title {
@@ -435,6 +448,10 @@
         color: #00d4ff;
         font-weight: 500;
         font-size: 16px;
+
+        .theme-light & {
+            color: #0088cc;
+        }
     }
 
     .close-button {
@@ -450,12 +467,25 @@
             color: #fff;
             background-color: #333;
         }
+
+        .theme-light & {
+            color: #666;
+
+            &:hover {
+                color: #000;
+                background-color: #f0f0f0;
+            }
+        }
     }
 
     .tutorial-content {
         padding: 16px 20px;
         color: #e0e0e0;
         line-height: 1.6;
+
+        .theme-light & {
+            color: #333;
+        }
 
         p {
             margin: 0;
@@ -469,11 +499,19 @@
         align-items: center;
         padding: 12px 20px 16px;
         border-top: 1px solid #333;
+
+        .theme-light & {
+            border-top: 1px solid #e0e0e0;
+        }
     }
 
     .step-indicator {
         color: #999;
         font-size: 12px;
+
+        .theme-light & {
+            color: #666;
+        }
     }
 
     .control-buttons {
@@ -499,6 +537,16 @@
             border-color: #777;
             background-color: #2a2a2a;
         }
+
+        .theme-light & {
+            border: 1px solid #ccc;
+            color: #333;
+
+            &:hover {
+                border-color: #999;
+                background-color: #f5f5f5;
+            }
+        }
     }
 
     .next-button {
@@ -510,6 +558,17 @@
             background-color: #00c0e6;
             border-color: #00c0e6;
         }
+
+        .theme-light & {
+            background-color: #0088cc;
+            border-color: #0088cc;
+            color: #fff;
+
+            &:hover {
+                background-color: #0066aa;
+                border-color: #0066aa;
+            }
+        }
     }
 
     .skip-button {
@@ -518,6 +577,15 @@
 
         &:hover {
             color: #ccc;
+        }
+
+        .theme-light & {
+            color: #666;
+            border-color: #bbb;
+
+            &:hover {
+                color: #333;
+            }
         }
     }
 </style>

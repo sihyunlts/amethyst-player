@@ -83,18 +83,19 @@
             flex-shrink: 0;
 
             transition: background-color 0.2s ease;
-            background-color: #242424;
+            background-color: var(--bg3);
+            border: 2px solid var(--bg4);
 
-            color: #d5d5d5;
+            color: var(--text1);
 
             &:hover {
-                background-color: rgb(10, 10, 10);
+                background-color: var(--bg1);
 
-                color: #c5c5c5;
+                color: var(--text1);
             }
 
             &:active  {
-                background-color: #lightgray;
+                background-color: var(--bg1);
                 scale: 0.95;
             }
         }
@@ -102,7 +103,7 @@
         .layers-container {
             min-width: 0;
             flex: 1;
-            max-width: min(calc(80px * 6 + 0.5em * 5), calc(100% - 72px - 16px));
+            max-width: min(calc(60px * 6 + 0.35em * 5), calc(100% - 72px - 16px));
             display: flex;
             justify-content: center;
             gap: 0.5em;
@@ -114,8 +115,11 @@
                 width: 40px;
                 height: 40px;
 
-                background-color: #242424;
+                background-color: var(--bg3);
+                border: 2px solid var(--bg4);
                 cursor: pointer;
+
+                border-radius: 5px;
 
                 display: flex;
                 justify-content: center;
@@ -126,21 +130,21 @@
                 transition: background-color 0.2s ease, width 0.2s ease;
 
                 span {
-                    color: #B5B5B5;
+                    color: var(--text2);
                     font-family: Inter, sans-serif;
                     font-weight: 500;
                 }
 
                 &:hover {
-                    background-color: #141414;
+                    background-color: var(--bg1);
                     width: min(50px, 100%);
                 }
 
                 &.selected {
-                    background-color: #141414;
+                    background-color: var(--selected);
                     width: min(80px, 100%);
                     span {
-                        color: #c5c5c5;
+                        color: var(--text1);
                         font-family: Inter, sans-serif;
                         font-weight: 500;
                     }

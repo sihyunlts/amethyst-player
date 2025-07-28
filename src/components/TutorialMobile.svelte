@@ -6,11 +6,13 @@
     import Close from "carbon-icons-svelte/lib/Close.svelte";
     import Information from "carbon-icons-svelte/lib/Information.svelte";
     import { t } from '$lib/translations';
+    import { theme } from '$lib/stores/theme';
 
     const dispatch = createEventDispatcher();
 
     export let show = false;
     export let currentStep = 0;
+    
     
     // Function to help with popup-dependent steps
     function handleStepTransition(stepIndex) {
@@ -230,7 +232,7 @@
 
 {#if show}
     <div 
-        class="tutorial-overlay-mobile" 
+        class="tutorial-overlay-mobile theme-{$theme}" 
         bind:this={tutorialOverlay}
         transition:fade={{ duration: 300 }}
     >
@@ -250,7 +252,7 @@
 
         <!-- Mobile tutorial tooltip -->
         <div 
-            class="tutorial-tooltip-mobile"
+            class="tutorial-tooltip-mobile theme-{$theme}"
             style="
                 {tooltipStyle.top ? `top: ${tooltipStyle.top};` : ''}
                 {tooltipStyle.bottom ? `bottom: ${tooltipStyle.bottom};` : ''}
@@ -353,6 +355,12 @@
         margin: 0 10px;
         z-index: 10002;
         font-family: "Roboto Mono", sans-serif;
+
+        &.theme-light {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
     }
 
     .tutorial-header-mobile {
@@ -361,6 +369,10 @@
         align-items: center;
         padding: 14px 16px 10px;
         border-bottom: 1px solid #333;
+
+        .theme-light & {
+            border-bottom: 1px solid #e0e0e0;
+        }
     }
 
     .tutorial-title-mobile {
@@ -370,6 +382,10 @@
         color: #00d4ff;
         font-weight: 500;
         font-size: 14px;
+
+        .theme-light & {
+            color: #0088cc;
+        }
     }
 
     .close-button-mobile {
@@ -385,12 +401,25 @@
             color: #fff;
             background-color: #333;
         }
+
+        .theme-light & {
+            color: #666;
+
+            &:hover {
+                color: #000;
+                background-color: #f0f0f0;
+            }
+        }
     }
 
     .tutorial-content-mobile {
         padding: 14px 16px;
         color: #e0e0e0;
         line-height: 1.5;
+
+        .theme-light & {
+            color: #333;
+        }
 
         p {
             margin: 0;
@@ -404,11 +433,19 @@
         align-items: center;
         padding: 10px 16px 14px;
         border-top: 1px solid #333;
+
+        .theme-light & {
+            border-top: 1px solid #e0e0e0;
+        }
     }
 
     .step-indicator-mobile {
         color: #999;
         font-size: 11px;
+
+        .theme-light & {
+            color: #666;
+        }
     }
 
     .control-buttons-mobile {
@@ -434,6 +471,16 @@
             border-color: #777;
             background-color: #2a2a2a;
         }
+
+        .theme-light & {
+            border: 1px solid #ccc;
+            color: #333;
+
+            &:hover {
+                border-color: #999;
+                background-color: #f5f5f5;
+            }
+        }
     }
 
     .next-button-mobile {
@@ -445,6 +492,17 @@
             background-color: #00c0e6;
             border-color: #00c0e6;
         }
+
+        .theme-light & {
+            background-color: #0088cc;
+            border-color: #0088cc;
+            color: #fff;
+
+            &:hover {
+                background-color: #0066aa;
+                border-color: #0066aa;
+            }
+        }
     }
 
     .skip-button-mobile {
@@ -453,6 +511,15 @@
 
         &:hover {
             color: #ccc;
+        }
+
+        .theme-light & {
+            color: #666;
+            border-color: #bbb;
+
+            &:hover {
+                color: #333;
+            }
         }
     }
 </style>

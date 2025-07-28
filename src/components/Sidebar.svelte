@@ -216,7 +216,7 @@
         min-width: 350px;
         max-width: 450px;
         width: 33vw;
-        background-color: rgb(20, 20, 20);
+        background-color: var(--bg1, rgb(20, 20, 20));
         box-shadow: 0 0 10px 0.5px black;
         overflow: hidden;
         z-index: 5;
@@ -268,7 +268,7 @@
                 font-size: 24px;
 
                 letter-spacing: 0.125rem;
-                color: #f5f5f5;
+                color: var(--text1);
             }
 
             span.subtitle {
@@ -282,7 +282,7 @@
                 font-size: 16px;
 
                 letter-spacing: 0.125rem;
-                color: rgba(245, 245, 245, 0.38);
+                color: var(--text2);
             }
         }
 
@@ -316,11 +316,11 @@
 
             .block-bar-clickable
             {
-                background-color: rgb(50, 50, 50);
+                background-color: var(--bg3, rgb(50, 50, 50));
                 transition: background-color 0.3s ease; /* Smooth transition */
             }
             .block-bar-clickable:hover {
-                background-color: rgb(10, 10, 10);
+                background-color: var(--bg1, rgb(10, 10, 10));
             }
 
 
@@ -330,7 +330,7 @@
                 font-weight: 300;
                 font-size: 20px;
 
-                color: rgba(245, 245, 245, 0.52);
+                color: var(--text2, rgba(245, 245, 245, 0.52));
                 margin-bottom: 10px;
             }
 
@@ -358,7 +358,7 @@
                             justify-content: center;
                             align-items: center;
 
-                            color: #fff;
+                            color: var(--text1, #fff);
 
                             img {
                                 height: 30px;
@@ -379,7 +379,7 @@
                             font-weight: 300;
                             font-size: 16px;
 
-                            color: #cbcbcb;
+                            color: var(--text1, #cbcbcb);
                         }
                     }
                 }
@@ -411,26 +411,26 @@
                 padding: 5px 15px;
                 border-radius: 8px;
 
-                background-color: rgb(20, 20, 20);
-                border: 2px solid rgb(40, 40, 40);
+                background-color: var(--bg1);
+                border: 2px solid var(--bg4);
 
                 transition: background-color 0.3s ease, border 0.3s ease, color 0.3s ease;
 
                 span {
                     font-family: "Roboto Mono", monospace;
 
-                    color: #dedede;
+                    color: var(--text1);
                 }
 
                 &:hover {
-                        background-color: rgb(10, 10, 10);
-                        border: 2px solid rgb(31, 31, 31);
+                        background-color: var(--bg3);
+                        border: 2px solid var(--bg4);
 
-                        color: #c5c5c5;
+                        color: var(--text1);
                     }
 
                 &:active {
-                    background-color: rgb(0,0,0);
+                    background-color: var(--bg4);
                 }
             }
         }
@@ -447,14 +447,14 @@
 
             .clickable-block-bar
             {
-                color: rgba(245, 245, 245, 0.52);
+                color: var(--text2);
 
                 transition: color 0.3s ease;
 
                 cursor: pointer;
 
                 &:hover {
-                    color: #cbcbcb;
+                    color: var(--text1);
                 }
             }
 
@@ -488,7 +488,7 @@
                     -ms-user-select: none;
                     -moz-user-select: none;
 
-                    color: #696969;
+                    color: var(--text2);
                 }
             }
             .demoplay-control-block {
@@ -514,19 +514,19 @@
                         height: 50px;
                         width: 50px;
 
-                        background-color: rgb(20, 20, 20);
-                        border: 2px solid rgb(40, 40, 40);
+                        background-color: var(--bg1);
+                        border: 2px solid var(--bg4);
                         border-radius: 50%;
 
-                        color: #d5d5d5;
+                        color: var(--text1);
 
                         transition: background-color 0.3s ease, border 0.3s ease, color 0.3s ease;
 
                         &:hover {
-                            background-color: rgb(10, 10, 10);
-                            border: 2px solid rgb(31, 31, 31);
+                            background-color: var(--bg3);
+                            border: 2px solid var(--bg4);
 
-                            color: #c5c5c5;
+                            color: var(--text1);
                         }
 
                         &:active {
@@ -553,14 +553,14 @@
                 justify-content: center;
                 align-items: center;
 
-                color: grey;
+                color: var(--text2);
 
                 transition: color 0.3s ease;
 
                 cursor: pointer;
 
                 &:hover {
-                    color: #cbcbcb;
+                    color: var(--text1);
                 }
             }
         }

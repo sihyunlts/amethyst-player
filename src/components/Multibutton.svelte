@@ -25,33 +25,33 @@
 
         padding: 5px 10px;
 
-        background-color: rgb(20, 20, 20);
-        border: 1px solid rgb(40, 40, 40);
-        border-top: 2px solid rgb(40, 40, 40);
-        border-bottom: 2px solid rgb(40, 40, 40);
+        background-color: var(--bg1);
+        border: 1px solid var(--bg4);
+        border-top: 2px solid var(--bg4);
+        border-bottom: 2px solid var(--bg4);
 
         font-size: 14px;
 
         font-family: "Roboto Mono", monospace;
 
-        color: #dedede;
+        color: var(--text1);
 
         &.left {
             padding: 5px 10px;
 
-            border-left: 2px solid rgb(40, 40, 40);
+            border-left: 2px solid var(--bg4);
             border-radius: 8px 0 0 8px;
         }
 
         &.right {
             padding: 5px 10px;
 
-            border-right: 2px solid rgb(40, 40, 40);
+            border-right: 2px solid var(--bg4);
             border-radius: 0 8px 8px 0;
         }
 
         &.active {
-            background-color: #323232;
+            background-color: var(--bg3);
         }
     }
 </style>
