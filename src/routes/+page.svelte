@@ -238,6 +238,19 @@
     const onKeyDown = (e: KeyboardEvent) => {
         if(e.repeat) return;
 
+        // Check if the active element is a text input
+        const activeElement = document.activeElement;
+        const isTextInput = activeElement && (
+            activeElement.tagName === 'INPUT' || 
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.isContentEditable ||
+            activeElement.getAttribute('contenteditable') === 'true'
+        );
+        
+        if (isTextInput) {
+            return; // Don't process shortcuts when typing in text inputs
+        }
+
         // Check if any popup is open - if so, don't process keyboard shortcuts
         const anyPopupOpen = Object.values(popup).some(isOpen => isOpen);
         if (anyPopupOpen) return;
@@ -248,6 +261,7 @@
         if(keyCode > 47 && keyCode < 58) // 0-9
         {
             if(currentStatus !== "loaded") return;
+            e.preventDefault();
             var layer = keyCode == 48 ? 9 : keyCode - 49;
             engine?.LayerChange(layer);
             return
@@ -257,17 +271,20 @@
             case 32: // Space
             case 80: // P
                 if(currentStatus !== "loaded") return;
+                e.preventDefault();
                 engine?.demoplay?.status === "PLAYING" ? engine?.demoplay?.Pause() : engine?.demoplay?.Start();
                 break;
             case 37: // Left - Previous Action
             case 65: // A
                 if(currentStatus !== "loaded") return;
+                e.preventDefault();
                 engine?.demoplay?.Pause();
                 engine?.demoplay?.Previous();
                 break;
             case 39: // Right - Next Action
             case 68: // D
                 if(currentStatus !== "loaded") return;
+                e.preventDefault();
                 engine?.demoplay?.Pause();
                 engine?.demoplay?.Next();
                 break;
@@ -275,23 +292,28 @@
             case 87: // W
             case 69: // E
                 if(currentStatus !== "loaded") return;
+                e.preventDefault();
                 engine?.LayerChange(engine?.currentLayer + 1);
                 break;
             case 40: // Down - Layer Up
             case 83: // S
             case 81: // Q
                 if(currentStatus !== "loaded") return;
+                e.preventDefault();
                 engine?.LayerChange(engine?.currentLayer - 1);
                 break;
             case 70: // F - Full Screen
             case 13: // Enter
             case 27: // Esc
+                e.preventDefault();
                 showSidebar = !showSidebar;
                 break;
             case 82: // R - Reload
+                e.preventDefault();
                 loadProject();
                 break;
             case 90: // Z - Show Settings
+                e.preventDefault();
                 if(popup["devices"] || popup["demoplay"]) 
                 {
                     popup["devices"] = false;
@@ -300,6 +322,7 @@
                 popup["setting"] = !popup["setting"];
                 break;
             case 72: // H - Show Tutorial
+                e.preventDefault();
                 currentStep = 0;
                 tutorialMode = false;
                 fakeProjectInfo = null;
@@ -308,6 +331,7 @@
                 showTutorial = true;
                 break;
             case 88: // X - Show Devices
+                e.preventDefault();
                 if(popup["setting"] || popup["demoplay"]) 
                 {
                     popup["setting"] = false;
@@ -317,6 +341,7 @@
                 break;
             case 67: // C - Show Demo Play Settings
                 if(currentStatus !== "loaded") return;
+                e.preventDefault();
                 if(popup["setting"] || popup["devices"]) 
                 {
                     popup["setting"] = false;
@@ -1291,4 +1316,4 @@
     }
 </style>
 
-<svelte:window on:keydown|preventDefault={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} />
