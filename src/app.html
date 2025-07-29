@@ -11,39 +11,6 @@
 		<meta name="apple-mobile-web-app-status-bar" content="#141414">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<style>
-			/* Default theme variables for SSR and before JS loads */
-			:root {
-				--bg2: #ffffff;
-				--bg1: #f8f9fa;
-				--bg3: #e9ecef;
-				--bg4: #dee2e6;
-				--text1: #212529;
-				--text2: #6c757d;
-				--selected: #0d6efd;
-				--enabled: #28a745;
-				--shadow: rgba(0, 0, 0, 0.1);
-				--overlay: rgba(0, 0, 0, 0.3);
-				--device-body: #141414;
-				--device-border: #282828;
-				--device-button: #d0d0d0;
-				--device-button-overlay: #141414;
-			}
-			
-			[data-theme="dark"] {
-				--bg2: #1d1d1d;
-				--bg1: #141414;
-				--bg3: #282828;
-				--bg4: #323232;
-				--text1: #cbcbcb;
-				--text2: #808080;
-				--selected: #80d2e4;
-				--enabled: #67e953;
-				--shadow: #000000;
-				--overlay: rgba(0, 0, 0, 0.48);
-			}
-		</style>
-
 		%sveltekit.head%
 	</head>
 	<body data-theme="dark">

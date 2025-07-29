@@ -307,25 +307,6 @@
             display: flex;
             flex-direction: column;
 
-            a.community-button {
-                margin-top: 30px;
-                text-align: center;
-
-                font-family: 'Roboto', sans-serif;
-                font-style: normal;
-                font-weight: 400;
-                font-size: 18px;
-                color: #80D2E4;
-
-                transition: color 0.3s ease;
-
-                cursor: pointer;
-
-                &:hover {
-                    color: #5093a2;
-                }
-            }
-
             .block-bar-clickable
             {
                 background-color: var(--bg3, rgb(50, 50, 50));
