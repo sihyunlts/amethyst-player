@@ -8,7 +8,7 @@ export class ProjectStoreService {
 
     const { data, error } = await supabase
       .from('public_projects')
-      .select('id, name, author, description, file_url, video_url, created_at')
+      .select('id, name, author, description, file_url, video_url, created_at, download_count, play_count')
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -59,7 +59,7 @@ export class ProjectStoreService {
 
     const { data, error } = await supabase
       .from('public_projects')
-      .select('id, name, author, description, file_url, video_url, created_at')
+      .select('id, name, author, description, file_url, video_url, created_at, download_count, play_count')
       .or(`name.ilike.%${query}%,author.ilike.%${query}%,description.ilike.%${query}%`)
       .order('created_at', { ascending: false })
 

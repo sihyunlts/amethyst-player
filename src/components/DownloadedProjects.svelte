@@ -246,7 +246,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
             transition: all 0.2s;
 
             &:hover {
@@ -266,7 +266,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
             transition: all 0.2s;
 
             &:hover {
@@ -468,7 +468,7 @@
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
             transition: all 0.2s;
 
             &:hover {

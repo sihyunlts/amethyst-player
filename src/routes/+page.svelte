@@ -1184,7 +1184,7 @@
         span {
             font-size: 18px;
 
-            font-family: "Roboto Mono", sans-serif;
+            font-family: "Roboto", sans-serif;
             color: var(--text2);
             font-weight: 300;
 
@@ -1234,7 +1234,7 @@
             margin: 0;
             font-size: 24px;
             font-weight: 300;
-            font-family: "Roboto Mono", sans-serif;
+            font-family: "Roboto", sans-serif;
         }
 
         .header-buttons {
@@ -1244,7 +1244,7 @@
         }
 
         .close-button {
-            background-color: var(--bg2);
+            background-color: inherit;
             border: 2px solid var(--bg4);
             color: var(--text2);
             cursor: pointer;
@@ -1253,7 +1253,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 
             &:hover {
@@ -1282,7 +1282,7 @@
             display: flex;
             align-items: center;
             color: var(--text1);
-            font-family: "Roboto Mono", sans-serif;
+            font-family: "Roboto", sans-serif;
             font-weight: 400;
         }
 
@@ -1313,9 +1313,9 @@
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
-        background-color: var(--bg2) !important;
+        background-color: inherit !important;
         border: 2px solid var(--bg4) !important;
-        border-radius: 6px;
+        border-radius: 8px;
         color: var(--text2) !important;
         cursor: pointer;
         transition: background-color 0.2s, color 0.2s, border-color 0.2s;
@@ -1345,7 +1345,7 @@
 
     .toast {
         display: contents;
-        font-family: "Roboto Mono", sans-serif;
+        font-family: "Roboto", sans-serif;
         font-style: normal;
         font-size: 16px;
         font-weight: 300;

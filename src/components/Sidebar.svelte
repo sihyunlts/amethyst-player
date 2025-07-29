@@ -410,7 +410,7 @@
                 transition: background-color 0.3s ease, border 0.3s ease, color 0.3s ease;
 
                 span {
-                    font-family: "Roboto Mono", monospace;
+                    font-family: "Roboto", sans-serif;
 
                     color: var(--text1);
                 }

@@ -8,7 +8,11 @@
     import Video from "carbon-icons-svelte/lib/Video.svelte";
     import Upload from "carbon-icons-svelte/lib/Upload.svelte";
     import Add from "carbon-icons-svelte/lib/Add.svelte";
+    import Play from "carbon-icons-svelte/lib/Play.svelte";
+    import Calendar from "carbon-icons-svelte/lib/Calendar.svelte";
     import { t } from '$lib/translations';
+    import Dropdown from "./Dropdown.svelte";
+    import { supabase } from '../lib/supabase';
     // Note: Play icon and downloadedProjectsService imports removed since caching is disabled
 
     let ProjectStoreService: any = null;
@@ -23,7 +27,7 @@
     let searchQuery = '';
     let loading = true;
     let error = '';
-    let sortBy = 'latest'; // 'latest' or 'downloads'
+    let sortBy = 'downloads'; // 'latest' or 'downloads'
     let downloadingProjects = new Map(); // Track downloading projects with progress
     
     // Submission-related variables
@@ -78,6 +82,26 @@
             error = '';
             projects = await projectStore.getPublicProjects();
             filteredProjects = projects;
+            
+            // Debug: Print project metadata
+            console.log('=== PROJECT METADATA DEBUG ===');
+            projects.forEach((project, index) => {
+                console.log(`Project ${index + 1}:`);
+                console.log({
+                    id: project.id,
+                    name: project.name,
+                    author: project.author,
+                    description: project.description,
+                    download_count: project.download_count,
+                    play_count: project.play_count,
+                    created_at: project.created_at,
+                    file_url: project.file_url,
+                    video_url: project.video_url
+                });
+                console.log('---');
+            });
+            console.log('=== END DEBUG ===');
+            
             sortProjects();
         } catch (err) {
             error = err.message || 'Failed to load projects';
@@ -140,6 +164,44 @@
             // Complete
             downloadingProjects.set(project.id, { progress: 100, status: 'complete' });
             downloadingProjects = downloadingProjects;
+            
+            // Increment both download and play counters
+            try {
+                const { error: downloadError } = await supabase.rpc('increment_download_count', {
+                    project_uuid: project.id
+                });
+                
+                const { error: playError } = await supabase.rpc('increment_play_count', {
+                    project_uuid: project.id
+                });
+                
+                if (downloadError) console.error('Failed to increment download count:', downloadError);
+                if (playError) console.error('Failed to increment play count:', playError);
+                
+                // Update local project data to reflect new counts
+                if (!downloadError && !playError) {
+                    // Find and update the project in both arrays
+                    const updateProjectCounts = (projectArray) => {
+                        const projectIndex = projectArray.findIndex(p => p.id === project.id);
+                        if (projectIndex !== -1) {
+                            projectArray[projectIndex] = {
+                                ...projectArray[projectIndex],
+                                download_count: (projectArray[projectIndex].download_count || 0) + 1,
+                                play_count: (projectArray[projectIndex].play_count || 0) + 1
+                            };
+                        }
+                    };
+                    
+                    updateProjectCounts(projects);
+                    updateProjectCounts(filteredProjects);
+                    
+                    // Trigger reactivity
+                    projects = projects;
+                    filteredProjects = filteredProjects;
+                }
+            } catch (error) {
+                console.error('Failed to update counters:', error);
+            }
             
             // Note: Caching disabled due to storage limitations
             // await downloadedProjectsService.addDownloadedProject(
@@ -251,7 +313,7 @@
 
     function sortProjects() {
         if (sortBy === 'downloads') {
-            filteredProjects = [...filteredProjects].sort((a, b) => (b.download_count || 0) - (a.download_count || 0));
+            filteredProjects = [...filteredProjects].sort((a, b) => (b.play_count || 0) - (a.play_count || 0));
         } else {
             filteredProjects = [...filteredProjects].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         }
@@ -436,12 +498,20 @@
                         class="search-input"
                     />
                 </div>
-                <!-- <div class="sort-container">
-                    <select id="sort-select" bind:value={sortBy} on:change={handleSortChange}>
-                        <option value="latest">Latest</option>
-                        <option value="downloads">Most Downloaded</option>
-                    </select>
-                </div> -->
+                <div class="sort-container">
+                    <button 
+                        class="sort-button {sortBy === 'downloads' ? 'active' : ''}" 
+                        on:click={() => { sortBy = 'downloads'; handleSortChange(); }}
+                    >
+                        Popular
+                    </button>
+                    <button 
+                        class="sort-button {sortBy === 'latest' ? 'active' : ''}" 
+                        on:click={() => { sortBy = 'latest'; handleSortChange(); }}
+                    >
+                        Latest
+                    </button>
+                </div>
             </div>
 
             {#if error}
@@ -461,11 +531,14 @@
                                 <p class="project-author">by {project.author}</p>
                                 <p class="project-description">{project.description}</p>
                                 <div class="project-meta">
-                                    <!-- <span class="download-count">{project.download_count || 0} {$t('sidebar.downloads')}</span> -->
-                                    <!-- {#if project.file_size}
-                                        <span class="file-size">{(project.file_size / 1024 / 1024).toFixed(1)} MB</span>
-                                    {/if} -->
-                                    <span class="created-date">{new Date(project.created_at).toLocaleDateString('en-CA')}</span>
+                                    <span class="stat-item">
+                                        <Play size={16} />
+                                        <span class="stat-count">{project.play_count || 0}</span>
+                                    </span>
+                                    <span class="stat-item">
+                                        <Calendar size={16} />
+                                        <span class="stat-count">{new Date(project.created_at).toLocaleDateString('en-CA')}</span>
+                                    </span>
                                 </div>
                                 {#if project.tags && project.tags.length > 0}
                                     <div class="project-tags">
@@ -697,7 +770,7 @@
         }
 
         .close-button {
-            background-color: var(--bg2);
+            background-color: inherit;
             border: 2px solid var(--bg4);
             color: var(--text2);
             cursor: pointer;
@@ -706,7 +779,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 
             &:hover {
@@ -717,7 +790,7 @@
         }
 
         .submit-project-button, .back-button {
-            background-color: var(--bg2);
+            background-color: inherit;
             border: 2px solid var(--bg4);
             color: var(--text2);
             cursor: pointer;
@@ -727,7 +800,7 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: background-color 0.2s, color 0.2s, border-color 0.2s;
             font-size: 14px;
             font-family: 'Roboto', sans-serif;
@@ -799,45 +872,48 @@
         }
 
         .sort-container {
-            min-width: 150px;
+            display: flex;
+            gap: 0;
+        }
 
-            select {
-                background-color: var(--bg2);
-                border: 2px solid var(--bg3);
-                border-radius: 8px;
-                color: var(--text1);
-                font-family: 'Roboto', sans-serif;
-                font-size: 16px;
-                padding: 12px;
-                cursor: pointer;
-                outline: none;
-                width: 100%;
-                height: 48px;
-                box-sizing: border-box;
-                appearance: none;
-                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23888' d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right 12px center;
-                background-size: 12px;
-                padding-right: 40px;
+        .sort-button {
+            background-color: inherit;
+            border: 2px solid var(--bg4);
+            color: var(--text2);
+            cursor: pointer;
+            height: 48px !important;
+            min-height: 48px;
+            max-height: 48px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 400;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            white-space: nowrap;
+            box-sizing: border-box;
 
-                &:hover {
-                    border-color: var(--bg4);
-                }
+            &:first-child {
+                border-radius: 8px 0 0 8px;
+                border-right: 1px solid var(--bg4);
+            }
 
-                &:focus {
-                    border-color: var(--bg4);
-                }
+            &:last-child {
+                border-radius: 0 8px 8px 0;
+                border-left: 1px solid var(--bg4);
+            }
 
-                option {
-                    background-color: var(--bg1);
-                    color: var(--text1);
-                    padding: 16px 12px;
-                    font-family: 'Roboto', sans-serif;
-                    font-size: 16px;
-                    line-height: 1.5;
-                    min-height: 40px;
-                }
+            &:hover {
+                background-color: var(--bg3);
+                color: var(--text2);
+            }
+
+            &.active {
+                background-color: var(--bg3);
+                color: var(--text2);
+                border-color: var(--bg4);
             }
         }
     }
@@ -881,6 +957,26 @@
         color: var(--text2);
         padding: 40px;
         font-size: 18px;
+    }
+
+    .project-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 8px;
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text2);
+            font-size: 14px;
+
+            .stat-count {
+                font-family: 'Roboto', sans-serif;
+                font-weight: 500;
+            }
+        }
     }
 
     .error-message {
@@ -998,7 +1094,7 @@
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
             font-weight: 450;
             transition: all 0.2s;
 
@@ -1026,7 +1122,7 @@
         .video-button {
             background-color: var(--bg2);
             border-color: var(--bg4);
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
             width: 44px;
             height: 44px;
             justify-content: center;
@@ -1049,7 +1145,7 @@
             background-color: var(--success-bg, #16A34A);
             border-color: var(--success-border, #15803D);
             color: var(--success-text, white);
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
 
             &:hover {
                 background-color: var(--success-hover-bg, #15803D);
@@ -1090,7 +1186,7 @@
                     left: 50%;
                     transform: translate(-50%, -50%);
                     color: var(--text1);
-                    font-family: "Roboto Mono", monospace;
+                    font-family: "Roboto", sans-serif;
                     font-size: 14px;
                     font-weight: 500;
                     z-index: 1;

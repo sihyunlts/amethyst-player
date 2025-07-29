@@ -26,7 +26,7 @@
         border: 2px solid var(--bg4);
 
         span {
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
 
             color: var(--text1);
         }

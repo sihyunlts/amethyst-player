@@ -95,7 +95,7 @@
 
             span {
                 margin-left: 10px;
-                font-family: "Roboto Mono", monospace;
+                font-family: "Roboto", sans-serif;
 
                 user-select: none;
                 -moz-user-select: none;
@@ -147,7 +147,7 @@
             font-size: 14px;
 
             color: var(--text1);
-            font-family: "Roboto Mono", monospace;
+            font-family: "Roboto", sans-serif;
             background-color: var(--bg1);
 
             border-radius: 6px;

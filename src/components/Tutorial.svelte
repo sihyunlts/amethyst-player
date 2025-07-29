@@ -416,7 +416,7 @@
         max-width: 400px;
         min-width: 300px;
         z-index: 10002;
-        font-family: "Roboto Mono", sans-serif;
+        font-family: "Roboto", sans-serif;
 
         // Light theme
         &.theme-light {
@@ -532,7 +532,7 @@
         padding: 8px 16px;
         border-radius: 6px;
         cursor: pointer;
-        font-family: "Roboto Mono", sans-serif;
+        font-family: "Roboto", sans-serif;
         font-size: 12px;
         display: flex;
         align-items: center;

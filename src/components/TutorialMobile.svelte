@@ -360,7 +360,7 @@
         min-width: calc(100vw - 20px);
         margin: 0 10px;
         z-index: 10002;
-        font-family: "Roboto Mono", sans-serif;
+        font-family: "Roboto", sans-serif;
 
         &.theme-light {
             background-color: #ffffff;
@@ -466,7 +466,7 @@
         padding: 6px 12px;
         border-radius: 6px;
         cursor: pointer;
-        font-family: "Roboto Mono", sans-serif;
+        font-family: "Roboto", sans-serif;
         font-size: 11px;
         display: flex;
         align-items: center;
