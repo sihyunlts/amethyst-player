@@ -534,13 +534,18 @@
 
     .project-card {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+        flex-direction: column;
         background-color: var(--bg2);
         border-radius: 10px;
         padding: 20px;
         margin-bottom: 16px;
         transition: background-color 0.2s;
+
+        @media (min-width: 768px) {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
 
         &:hover {
             background-color: var(--bg3);
@@ -548,7 +553,10 @@
 
         .project-info {
             flex: 1;
-            margin-right: 20px;
+            
+            @media (min-width: 768px) {
+                margin-right: 20px;
+            }
 
             .project-name {
                 color: var(--text1);
@@ -614,6 +622,11 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            margin-top: 16px;
+            
+            @media (min-width: 768px) {
+                margin-top: 0;
+            }
         }
 
         .download-button, .video-button, .play-button {
@@ -640,6 +653,17 @@
             }
         }
 
+        .download-button {
+            height: 44px;
+            box-sizing: border-box;
+            
+            @media (max-width: 767px) {
+                flex: 1;
+                justify-content: center;
+                padding: 0 16px;
+            }
+        }
+
         .video-button {
             background-color: var(--bg2);
             border-color: var(--bg4);
@@ -648,6 +672,13 @@
             height: 44px;
             justify-content: center;
             padding: 0;
+            flex-shrink: 0;
+            box-sizing: border-box;
+
+            @media (max-width: 767px) {
+                width: 44px;
+                height: 44px;
+            }
 
             &:hover {
                 background-color: var(--bg3);
@@ -673,6 +704,10 @@
             height: 48px; // Same height as download button
             display: flex;
             align-items: center;
+            
+            @media (max-width: 767px) {
+                flex: 1;
+            }
             
             .progress-bar {
                 width: 100%;
