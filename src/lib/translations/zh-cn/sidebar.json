@@ -43,5 +43,7 @@
     "file_type_error": "仅支持 ZIP 文件",
     "field_required": "此字段为必填项",
     "invalid_email": "请输入有效的邮箱地址",
-    "invalid_url": "请输入有效的网址"
+    "invalid_url": "请输入有效的网址",
+    "sort_popular": "热门",
+    "sort_latest": "最新"
 }

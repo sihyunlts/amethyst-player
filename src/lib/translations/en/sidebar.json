@@ -43,5 +43,7 @@
     "file_type_error": "Only ZIP files are allowed",
     "field_required": "This field is required",
     "invalid_email": "Please enter a valid email address",
-    "invalid_url": "Please enter a valid URL"
+    "invalid_url": "Please enter a valid URL",
+    "sort_popular": "Popular",
+    "sort_latest": "Latest"
 }

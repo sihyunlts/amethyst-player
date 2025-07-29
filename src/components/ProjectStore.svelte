@@ -503,13 +503,13 @@
                         class="sort-button {sortBy === 'downloads' ? 'active' : ''}" 
                         on:click={() => { sortBy = 'downloads'; handleSortChange(); }}
                     >
-                        Popular
+                        {$t('sidebar.sort_popular')}
                     </button>
                     <button 
                         class="sort-button {sortBy === 'latest' ? 'active' : ''}" 
                         on:click={() => { sortBy = 'latest'; handleSortChange(); }}
                     >
-                        Latest
+                        {$t('sidebar.sort_latest')}
                     </button>
                 </div>
             </div>
@@ -874,6 +874,7 @@
         .sort-container {
             display: flex;
             gap: 0;
+            width: 200px;
         }
 
         .sort-button {
@@ -894,6 +895,7 @@
             transition: background-color 0.2s, color 0.2s, border-color 0.2s;
             white-space: nowrap;
             box-sizing: border-box;
+            flex: 1;
 
             &:first-child {
                 border-radius: 8px 0 0 8px;
