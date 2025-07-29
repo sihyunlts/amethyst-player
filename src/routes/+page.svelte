@@ -12,6 +12,7 @@
     import {GridController} from "../hardware/hardware";
 
     import Information from "carbon-icons-svelte/lib/Information.svelte";
+    import Close from "carbon-icons-svelte/lib/Close.svelte";
 
     import Popup from "../components/Popup.svelte";
     import Dropdown from "../components/Dropdown.svelte";
@@ -720,311 +721,337 @@
         </div>
     {/if}
 
-    <Popup bind:mobile={mobileView} bind:show={popup["setting"]}>
-        <div class="settings-popup" data-tutorial="settings">
-            <div class="popup-header center-class">
-                <span>{$t("setting.settings")}</span>
-            </div>
-
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("setting.virtual_device") + ":"}</span>
+    <Popup bind:mobile={mobileView} bind:show={popup["setting"]} clearPopup={true}>
+        <div class="settings-overlay">
+            <div class="settings-modal">
+                <div class="modal-header">
+                    <h2>{$t("setting.settings")}</h2>
+                    <div class="header-buttons">
+                        <button class="close-button" on:click={() => popup["setting"] = false}>
+                            <Close size={24} />
+                        </button>
+                    </div>
                 </div>
 
-                <div class="setting-option">
-                    <Dropdown
-                            bind:value={settings.virtualDevice}
-                            options={Object.keys(virtualDeviceComponents)}
-                    />
-                </div>
-            </div>
+                <div class="settings-content">
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("setting.virtual_device")}</span>
+                        </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("setting.virtual_device_Scale") + ":"}</span>
-                </div>
+                        <div class="setting-option">
+                            <Dropdown
+                                    bind:value={settings.virtualDevice}
+                                    options={Object.keys(virtualDeviceComponents)}
+                            />
+                        </div>
+                    </div>
 
-                <div class="setting-option">
-                    <Multibutton
-                            bind:value={settings.virtualDeviceScale}
-                            options={["50%", "75%", "100%", "125%", "150%"]}
-                    />
-                </div>
-            </div>
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("setting.virtual_device_Scale")}</span>
+                        </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("setting.project_engine") + ":"}</span>
-                </div>
+                        <div class="setting-option">
+                            <Multibutton
+                                    bind:value={settings.virtualDeviceScale}
+                                    options={["50%", "75%", "100%", "125%", "150%"]}
+                            />
+                        </div>
+                    </div>
 
-                <div class="setting-option">
-                    <Dropdown
-                        bind:value={settings.projectEngine}
-                        options={Object.keys(projectEngines)}
-                        on:change={() => {
-                        engine =
-                            projectEngines[settings.projectEngine](api);
-                        }}
-                    />
-                </div>
-            </div>
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("setting.project_engine")}</span>
+                        </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("setting.language") + ":"}</span>
-                </div>
+                        <div class="setting-option">
+                            <Dropdown
+                                bind:value={settings.projectEngine}
+                                options={Object.keys(projectEngines)}
+                                on:change={() => {
+                                engine =
+                                    projectEngines[settings.projectEngine](api);
+                                }}
+                            />
+                        </div>
+                    </div>
 
-                <div class="setting-option">
-                    <Dropdown
-                        value={$t(`lang.${locale.get()}`)}
-                        options={$locales.map((x) =>
-                            $t(`lang.${x}`)
-                        )}
-                        on:change={(e) => {
-                        $locale = $locales[e.detail.index];
-                        settings.language = $locales[e.detail.index];
-                        }}
-                    />
-                </div>
-            </div>
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("setting.language")}</span>
+                        </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("setting.theme") + ":"}</span>
-                </div>
+                        <div class="setting-option">
+                            <Dropdown
+                                value={$t(`lang.${locale.get()}`)}
+                                options={$locales.map((x) =>
+                                    $t(`lang.${x}`)
+                                )}
+                                on:change={(e) => {
+                                $locale = $locales[e.detail.index];
+                                settings.language = $locales[e.detail.index];
+                                }}
+                            />
+                        </div>
+                    </div>
 
-                <div class="setting-option">
-                    <Dropdown
-                        value={$themeMode === 'auto' ? $t('setting.theme_auto') : $themeMode === 'light' ? $t('setting.theme_light') : $t('setting.theme_dark')}
-                        options={[$t('setting.theme_auto'), $t('setting.theme_light'), $t('setting.theme_dark')]}
-                        on:change={(e) => {
-                            const themes = ['auto', 'light', 'dark'];
-                            $themeMode = themes[e.detail.index];
-                        }}
-                    />
-                </div>
-            </div>
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("setting.theme")}</span>
+                        </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t('tutorial.help_and_tutorial')}</span>
-                </div>
+                        <div class="setting-option">
+                            <Dropdown
+                                value={$themeMode === 'auto' ? $t('setting.theme_auto') : $themeMode === 'light' ? $t('setting.theme_light') : $t('setting.theme_dark')}
+                                options={[$t('setting.theme_auto'), $t('setting.theme_light'), $t('setting.theme_dark')]}
+                                on:change={(e) => {
+                                    const themes = ['auto', 'light', 'dark'];
+                                    $themeMode = themes[e.detail.index];
+                                }}
+                            />
+                        </div>
+                    </div>
 
-                <div class="setting-option">
-                    <div class="help-button" on:click={() => { 
-                        popup["setting"] = false; 
-                        currentStep = 0; 
-                        tutorialMode = false;
-                        fakeProjectInfo = null;
-                        fakeDemoplay = null;
-                        showSidebar = true;
-                        showTutorial = true; 
-                    }}>
-                        <Help size={20} />
-                        <span>{$t('tutorial.show_tutorial')}</span>
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t('tutorial.help_and_tutorial')}</span>
+                        </div>
+
+                        <div class="setting-option">
+                            <div class="help-button" on:click={() => { 
+                                popup["setting"] = false; 
+                                currentStep = 0; 
+                                tutorialMode = false;
+                                fakeProjectInfo = null;
+                                fakeDemoplay = null;
+                                showSidebar = true;
+                                showTutorial = true; 
+                            }}>
+                                <Help size={20} />
+                                <span>{$t('tutorial.show_tutorial')}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </Popup>
 
-    <Popup bind:mobile={mobileView} bind:show={popup["devices"]}>
-        <div class="settings-popup" data-tutorial="devices">
-            <div class="popup-header center-class">
-                <span>{$t("device.device")}</span>
+    <Popup bind:mobile={mobileView} bind:show={popup["devices"]} clearPopup={true}>
+        <div class="settings-overlay">
+            <div class="settings-modal">
+                <div class="modal-header">
+                    <h2>{$t("device.device")}</h2>
+                    <div class="header-buttons">
+                        <button class="close-button" on:click={() => popup["devices"] = false}>
+                            <Close size={24} />
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-content">
+                    {#if !settings.deviceSettingAdvanced}
+                        <div class="setting {mobileView? 'mobile' : ''}">
+                            <div class="setting-name">
+                                <span>{$t("device.midi_device")}</span>
+                            </div>
+
+                            <div class="setting-option">
+                                <Dropdown
+                                        value={reactiveVars.activeDevice}
+                                        options={Object.keys(
+                                        GridController.availableDevices()
+                                    )}
+                                        placeholder={$t("device.no_device")}
+                                        on:change={(e) => {
+                                        settings.deviceInput = e.detail.value;
+                                        settings.deviceOutput = e.detail.value;
+                                        if (e.detail.value) {
+                                            midiDeviceInfos[0] = undefined;
+                                            midiDevices[0].connectDevice(
+                                                GridController.availableDevices()[
+                                                    e.detail.value
+                                                ]
+                                            );
+                                        } else {
+                                            midiDevices[0].disconnect();
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    {:else}
+                        <div class="setting {mobileView? 'mobile' : ''}">
+                            <div class="setting-name">
+                                <span>{$t("device.midi_input_device")}</span>
+                            </div>
+
+                            <div class="setting-option">
+                                <Dropdown
+                                        value={reactiveVars.activeInput}
+                                        options={Object.keys(
+                                        GridController.availableDeviceInputs()
+                                    )}
+                                        placeholder={$t("device.no_device")}
+                                        on:change={(e) => {
+                                        settings.deviceInput = e.detail.value;
+                                        midiDeviceInfos[0] = undefined;
+                                        midiDevices[0].connect(
+                                            GridController.availableDeviceInputs()[
+                                                e.detail.value
+                                            ],
+                                            midiDevices[0].activeOutput,
+                                            midiDevices[0].activeConfig
+                                        );
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <div class="setting {mobileView? 'mobile' : ''}">
+                            <div class="setting-name">
+                                <span>{$t("device.midi_output_device")}</span>
+                            </div>
+
+                            <div class="setting-option">
+                                <Dropdown
+                                        value={reactiveVars.activeOutput}
+                                        options={Object.keys(
+                                        GridController.availableDeviceOutputs()
+                                    )}
+                                        placeholder={$t("device.no_device")}
+                                        on:change={(e) => {
+                                        settings.deviceOutput = e.detail.value;
+                                        midiDeviceInfos[0] = undefined;
+                                        midiDevices[0].connect(
+                                            midiDevices[0].activeInput,
+                                            GridController.availableDeviceOutputs()[
+                                                e.detail.value
+                                            ],
+                                            midiDevices[0].activeConfig
+                                        );
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    {/if}
+
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("device.midi_device_config")}</span>
+                        </div>
+
+                        <div class="setting-option">
+                            <Dropdown
+                                    value={reactiveVars.activeConfig}
+                                    options={Object.keys(GridController.configList())}
+                                    placeholder={$t("device.no_config")}
+                                    on:change={(e) => {
+                                    settings.deviceConfig = e.detail.value;
+                                    if (e.detail.value) {
+                                        midiDeviceInfos[0] = undefined;
+                                        midiDevices[0].connect(
+                                            midiDevices[0].activeInput,
+                                            midiDevices[0].activeOutput,
+                                            GridController.configList()[e.detail.value]
+                                        );
+                                    } else {
+                                        midiDevices[0].disconnect();
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("device.advanced_mode")}</span>
+                        </div>
+
+                        <div class="setting-option">
+                            <Switch bind:checked={settings.deviceSettingAdvanced}/>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
+    </Popup>
 
-            {#if !settings.deviceSettingAdvanced}
-                <div class="setting {mobileView? 'mobile' : ''}">
-                    <div class="setting-name">
-                        <span>{$t("device.midi_device") + ":"}</span>
-                    </div>
-
-                    <div class="setting-option">
-                        <Dropdown
-                                value={reactiveVars.activeDevice}
-                                options={Object.keys(
-                                GridController.availableDevices()
-                            )}
-                                placeholder={$t("device.no_device")}
-                                on:change={(e) => {
-                                settings.deviceInput = e.detail.value;
-                                settings.deviceOutput = e.detail.value;
-                                if (e.detail.value) {
-                                    midiDeviceInfos[0] = undefined;
-                                    midiDevices[0].connectDevice(
-                                        GridController.availableDevices()[
-                                            e.detail.value
-                                        ]
-                                    );
-                                } else {
-                                    midiDevices[0].disconnect();
-                                }
-                            }}
-                        />
-                    </div>
-                </div>
-            {:else}
-                <div class="setting {mobileView? 'mobile' : ''}">
-                    <div class="setting-name">
-                        <span>{$t("device.midi_input_device") + ":"}</span>
-                    </div>
-
-                    <div class="setting-option">
-                        <Dropdown
-                                value={reactiveVars.activeInput}
-                                options={Object.keys(
-                                GridController.availableDeviceInputs()
-                            )}
-                                placeholder={$t("device.no_device")}
-                                on:change={(e) => {
-                                settings.deviceInput = e.detail.value;
-                                midiDeviceInfos[0] = undefined;
-                                midiDevices[0].connect(
-                                    GridController.availableDeviceInputs()[
-                                        e.detail.value
-                                    ],
-                                    midiDevices[0].activeOutput,
-                                    midiDevices[0].activeConfig
-                                );
-                            }}
-                        />
+    <Popup bind:mobile={mobileView} bind:show={popup["demoplay"]} clearPopup={true}>
+        <div class="settings-overlay">
+            <div class="settings-modal">
+                <div class="modal-header">
+                    <h2>{$t("demoplay.demoplay")}</h2>
+                    <div class="header-buttons">
+                        <button class="close-button" on:click={() => popup["demoplay"] = false}>
+                            <Close size={24} />
+                        </button>
                     </div>
                 </div>
 
-                <div class="setting {mobileView? 'mobile' : ''}">
-                    <div class="setting-name">
-                        <span>{$t("device.midi_output_device") + ":"}</span>
+                <div class="settings-content">
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("demoplay.light_animation")}</span>
+                        </div>
+
+                        <div class="setting-option">
+                            <Switch bind:checked={options.lightAnimation}/>
+                        </div>
                     </div>
 
-                    <div class="setting-option">
-                        <Dropdown
-                                value={reactiveVars.activeOutput}
-                                options={Object.keys(
-                                GridController.availableDeviceOutputs()
-                            )}
-                                placeholder={$t("device.no_device")}
-                                on:change={(e) => {
-                                settings.deviceOutput = e.detail.value;
-                                midiDeviceInfos[0] = undefined;
-                                midiDevices[0].connect(
-                                    midiDevices[0].activeInput,
-                                    GridController.availableDeviceOutputs()[
-                                        e.detail.value
-                                    ],
-                                    midiDevices[0].activeConfig
-                                );
-                            }}
-                        />
-                    </div>
-                </div>
-            {/if}
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("demoplay.show_key_press")}</span>
+                        </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("device.midi_device_config") + ":"}</span>
-                </div>
-
-                <div class="setting-option">
-                    <Dropdown
-                            value={reactiveVars.activeConfig}
-                            options={Object.keys(GridController.configList())}
-                            placeholder={$t("device.no_config")}
+                        <div class="setting-option">
+                            <Switch bind:checked={options.showKeyPress}
                             on:change={(e) => {
-                            settings.deviceConfig = e.detail.value;
-                            if (e.detail.value) {
-                                midiDeviceInfos[0] = undefined;
-                                midiDevices[0].connect(
-                                    midiDevices[0].activeInput,
-                                    midiDevices[0].activeOutput,
-                                    GridController.configList()[e.detail.value]
-                                );
-                            } else {
-                                midiDevices[0].disconnect();
-                            }
-                        }}
-                    />
-                </div>
-            </div>
+                                if(!e.detail.checked){options.learningMode = false; api.clearOverlay();}
+                                else { engine.demoplay?.showActionKeys();} //NOTE THIS IS NOT A STANDARD PROJECTRT API}
+                            }} 
+                            />
+                        </div>
+                    </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("device.advanced_mode") + ":"}</span>
-                </div>
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div class="setting-name">
+                            <span>{$t("demoplay.key_press_color")}</span>
+                        </div>
 
-                <div class="setting-option">
-                    <Switch bind:checked={settings.deviceSettingAdvanced}/>
-                </div>
-            </div>
-        </div>
-    </Popup>
+                        <div class="setting-option">
+                            <Dropdown
+                                bind:value={settings.keypressColor}
+                                options={Object.keys(keyPressColors)}
+                            />
+                        </div>
+                    </div>
 
-    <Popup bind:mobile={mobileView} bind:show={popup["demoplay"]}>
-        <div class="settings-popup" data-tutorial="demoplay">
-            <div class="popup-header center-class">
-                <span>{$t("demoplay.demoplay")}</span>
-            </div>
+                    <div class="setting {mobileView? 'mobile' : ''}">
+                        <div
+                                class="setting-name"
+                                title={$t("demoplay.learning_mode_info")}
+                        >
+                            <span>{$t("demoplay.learning_mode")}</span>
+                            <Information
+                                    size={14}
+                                    style="margin-left: 4px; margin-top: 2px; color:#A0A0A0;"
+                            />
+                        </div>
 
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("demoplay.light_animation")}</span>
-                </div>
-
-                <div class="setting-option">
-                    <Switch bind:checked={options.lightAnimation}/>
-                </div>
-            </div>
-
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("demoplay.show_key_press")}</span>
-                </div>
-
-                <div class="setting-option">
-                    <Switch bind:checked={options.showKeyPress}
-                    on:change={(e) => {
-                        if(!e.detail.checked){options.learningMode = false; api.clearOverlay();}
-                        else { engine.demoplay?.showActionKeys();} //NOTE THIS IS NOT A STANDARD PROJECTRT API}
-                    }} 
-                    />
-                </div>
-            </div>
-
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div class="setting-name">
-                    <span>{$t("demoplay.key_press_color")}</span>
-                </div>
-
-                <div class="setting-option">
-                    <Dropdown
-                        bind:value={settings.keypressColor}
-                        options={Object.keys(keyPressColors)}
-                    />
-                </div>
-            </div>
-
-
-            <div class="setting {mobileView? 'mobile' : ''}">
-                <div
-                        class="setting-name"
-                        title={$t("demoplay.learning_mode_info")}
-                >
-                    <span>{$t("demoplay.learning_mode")}</span>
-                    <Information
-                            size={14}
-                            style="margin-left: 4px; margin-top: 2px; color:#A0A0A0;"
-                    />
-                </div>
-
-                <div class="setting-option">
-                    <Switch bind:checked={options.learningMode}
-                        on:change={(e) => {
-                            if(e.detail.checked){
-                                options.showKeyPress = true;
-                                engine.demoplay?.showActionKeys() //NOTE THIS IS NOT A STANDARD PROJECTRT API
-                            }
-                        }} 
-                    />
+                        <div class="setting-option">
+                            <Switch bind:checked={options.learningMode}
+                                on:change={(e) => {
+                                    if(e.detail.checked){
+                                        options.showKeyPress = true;
+                                        engine.demoplay?.showActionKeys() //NOTE THIS IS NOT A STANDARD PROJECTRT API
+                                    }
+                                }} 
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1171,93 +1198,148 @@
         }
     }
 
-    .settings-popup {
+    .settings-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .settings-modal {
+        background-color: var(--bg1);
+        border-radius: 12px;
+        width: min(90vw, 600px);
+        max-height: min(85vh, 700px);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
 
-        .popup-header {
-            height: 30px;
-            font-size: 26px;
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--bg3);
 
-            font-family: "Roboto Mono", sans-serif;
+        h2 {
             color: var(--text1);
+            margin: 0;
+            font-size: 24px;
             font-weight: 300;
-
-            margin-bottom: 20px;
+            font-family: "Roboto Mono", sans-serif;
         }
 
-        .setting {
-            height: 35px;
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
+        .close-button {
+            background-color: var(--bg2);
+            border: 2px solid var(--bg4);
+            color: var(--text2);
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+
+            &:hover {
+                background-color: var(--bg3);
+                border-color: var(--bg4);
+                color: var(--text1);
+            }
+        }
+    }
+
+    .settings-content {
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .setting {
+        height: 35px;
+        display: flex;
+        align-items: center;
+
+        .setting-name {
+            width: 250px;
+            display: flex;
+            align-items: center;
+            color: var(--text1);
+            font-family: "Roboto Mono", sans-serif;
+            font-weight: 400;
+        }
+
+        .setting-option {
+            min-width: 300px;
+            display: flex;
+            flex-direction: row-reverse;
+        }
+
+        &.mobile {
+            flex-direction: column;
+            height: auto;
+            gap: 10px;
 
             .setting-name {
-                width: 250px;
-                display: flex;
-                align-items: center;
-
-                color: var(--text1);
-
-                font-family: "Roboto Mono", sans-serif;
-                font-weight: 400;
+                width: 100%;
             }
 
             .setting-option {
-                min-width: 300px;
-                display: flex;
-                flex-direction: row-reverse;
-            }
-
-            &.mobile {
-                flex-direction: column;
-                height: auto;
-                gap: 10px;
-
-                .setting-name {
-                    width: 100%;
-                }
-
-                .setting-option {
-                    width: 100%;
-                    flex-direction: row;
-                }
+                width: 100%;
+                flex-direction: row;
             }
         }
+    }
 
-        .help-button {
-            display: flex !important;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background-color: var(--bg1) !important;
-            border: 2px solid var(--bg4) !important;
-            border-radius: 8px;
+    .help-button {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background-color: var(--bg2) !important;
+        border: 2px solid var(--bg4) !important;
+        border-radius: 6px;
+        color: var(--text2) !important;
+        cursor: pointer;
+        transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        font-family: "Roboto", sans-serif !important;
+        font-size: 14px !important;
+        text-decoration: none;
+        outline: none;
+
+        &:hover {
+            background-color: var(--bg3) !important;
+            border-color: var(--bg4) !important;
             color: var(--text1) !important;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: "Roboto Mono", sans-serif !important;
-            font-size: 14px !important;
-            text-decoration: none;
-            outline: none;
+        }
 
-            &:hover {
-                background-color: var(--bg3) !important;
-                border-color: var(--bg4) !important;
-                color: var(--text1) !important;
-            }
+        &:active {
+            background-color: var(--bg4) !important;
+            color: var(--text1) !important;
+        }
 
-            &:active {
-                background-color: var(--bg4) !important;
-                color: var(--text1) !important;
-            }
-
-            span {
-                color: var(--text1) !important;
-                font-family: "Roboto Mono", sans-serif !important;
-                font-size: 14px !important;
-            }
+        span {
+            color: inherit !important;
+            font-family: inherit !important;
+            font-size: inherit !important;
+            font-weight: 500;
         }
     }
 
