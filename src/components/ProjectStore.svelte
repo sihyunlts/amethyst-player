@@ -1,11 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from 'svelte';
     import { browser } from '$app/environment';
-    import type { PublicProject } from '../lib/supabase';
+    import type { PublicProject, SubmittedProject } from '../lib/supabase';
     import Search from "carbon-icons-svelte/lib/Search.svelte";
     import Download from "carbon-icons-svelte/lib/Download.svelte";
     import Close from "carbon-icons-svelte/lib/Close.svelte";
     import Video from "carbon-icons-svelte/lib/Video.svelte";
+    import Upload from "carbon-icons-svelte/lib/Upload.svelte";
+    import Add from "carbon-icons-svelte/lib/Add.svelte";
     import { t } from '$lib/translations';
     // Note: Play icon and downloadedProjectsService imports removed since caching is disabled
 
@@ -23,13 +25,35 @@
     let error = '';
     let sortBy = 'latest'; // 'latest' or 'downloads'
     let downloadingProjects = new Map(); // Track downloading projects with progress
+    
+    // Submission-related variables
+    let activeTab = 'browse'; // 'browse' or 'submit'
+    let submissionService: any = null;
+    
+    // Submission form data
+    let submissionForm = {
+        name: '',
+        author: '',
+        description: '',
+        email: '',
+        videoUrl: '',
+        file: null as File | null,
+        authorPermission: false
+    };
+    let submissionLoading = false;
+    let submissionError = '';
+    let submissionSuccess = false;
 
     onMount(async () => {
         if (browser) {
             try {
                 const { ProjectStoreService: Service } = await import('../lib/services/projectStore');
+                const { ProjectSubmissionService } = await import('../lib/services/projectSubmission');
+                
                 ProjectStoreService = Service;
                 projectStore = new ProjectStoreService();
+                submissionService = new ProjectSubmissionService();
+                
                 await loadProjects();
             } catch (err) {
                 error = 'Failed to load project store service';
@@ -238,6 +262,127 @@
         dispatch('close');
     }
 
+    function switchTab(tab: string) {
+        activeTab = tab;
+        submissionError = '';
+        submissionSuccess = false;
+    }
+
+    function handleFileSelect(event: Event) {
+        const target = event.target as HTMLInputElement;
+        const file = target.files?.[0];
+        
+        if (file) {
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                submissionError = $t('sidebar.file_type_error');
+                target.value = '';
+                return;
+            }
+            
+            if (file.size > 50 * 1024 * 1024) {
+                submissionError = $t('sidebar.file_size_error');
+                target.value = '';
+                return;
+            }
+            
+            submissionForm.file = file;
+            submissionError = '';
+        }
+    }
+
+    async function submitProject() {
+        // Clear any previous errors
+        submissionError = '';
+        
+        if (!submissionService) {
+            submissionError = $t('sidebar.submission_service_error');
+            return;
+        }
+
+        // Detailed field validation
+        if (!submissionForm.name.trim()) {
+            submissionError = $t('sidebar.project_name') + ': ' + $t('sidebar.field_required');
+            return;
+        }
+        
+        if (!submissionForm.author.trim()) {
+            submissionError = $t('sidebar.project_author') + ': ' + $t('sidebar.field_required');
+            return;
+        }
+        
+        if (!submissionForm.email.trim()) {
+            submissionError = $t('sidebar.project_email') + ': ' + $t('sidebar.field_required');
+            return;
+        }
+        
+        // Email validation
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(submissionForm.email)) {
+            submissionError = $t('sidebar.invalid_email');
+            return;
+        }
+        
+        // URL validation (if provided)
+        if (submissionForm.videoUrl.trim() && submissionForm.videoUrl.trim() !== '') {
+            const urlPattern = /^https?:\/\/.+/;
+            if (!urlPattern.test(submissionForm.videoUrl)) {
+                submissionError = $t('sidebar.invalid_url');
+                return;
+            }
+        }
+        
+        if (!submissionForm.file) {
+            submissionError = $t('sidebar.project_file_unipack') + ': ' + $t('sidebar.field_required');
+            return;
+        }
+        
+        if (!submissionForm.authorPermission) {
+            submissionError = $t('sidebar.field_required');
+            return;
+        }
+
+        try {
+            submissionLoading = true;
+
+            const projectData = {
+                name: submissionForm.name,
+                author: submissionForm.author,
+                description: submissionForm.description,
+                videoUrl: submissionForm.videoUrl || undefined
+            };
+
+            // Submit anonymously - no user authentication required
+            await submissionService.submitProject(
+                projectData,
+                submissionForm.file,
+                submissionForm.email
+            );
+
+            // Reset form
+            submissionForm = {
+                name: '',
+                author: '',
+                description: '',
+                email: '',
+                videoUrl: '',
+                file: null,
+                authorPermission: false
+            };
+            
+            // Clear file input
+            const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+            if (fileInput) fileInput.value = '';
+            
+            submissionSuccess = true;
+            
+        } catch (err) {
+            submissionError = err instanceof Error ? err.message : 'Submission failed';
+        } finally {
+            submissionLoading = false;
+        }
+    }
+
+
     $: if (searchQuery !== undefined) {
         handleSearch();
     }
@@ -247,12 +392,40 @@
     <div class="project-store-overlay" on:click={closeStore}>
         <div class="project-store-modal" on:click|stopPropagation>
             <div class="modal-header">
-                <h2>{$t('sidebar.project_store_title')}</h2>
-                <button class="close-button" on:click={closeStore}>
-                    <Close size={24} />
-                </button>
+                <h2>
+                    {#if activeTab === 'submit'}
+                        {$t('sidebar.submit_project')}
+                    {:else}
+                        {$t('sidebar.project_store_title')}
+                    {/if}
+                </h2>
+                <div class="header-buttons">
+                    {#if activeTab === 'submit'}
+                        <button 
+                            class="back-button" 
+                            on:click={() => switchTab('browse')}
+                            title="Back to Browse"
+                        >
+                            <Search size={16} />
+                            <span>{$t('sidebar.browse_projects')}</span>
+                        </button>
+                    {:else}
+                        <button 
+                            class="submit-project-button" 
+                            on:click={() => switchTab('submit')}
+                            title="Submit Project"
+                        >
+                            <Add size={16} />
+                            <span>{$t('sidebar.submit_project')}</span>
+                        </button>
+                    {/if}
+                    <button class="close-button" on:click={closeStore}>
+                        <Close size={24} />
+                    </button>
+                </div>
             </div>
 
+            {#if activeTab === 'browse'}
             <div class="search-section">
                 <div class="search-input-container">
                     <Search size={20} />
@@ -336,6 +509,144 @@
                     {/each}
                 {/if}
             </div>
+            {/if}
+
+            {#if activeTab === 'submit'}
+            <div class="submission-section">
+                {#if submissionSuccess}
+                    <div class="success-container">
+                        <div class="success-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="m9 12 2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <h3>{$t('sidebar.project_submitted_success')}</h3>
+                        <p class="preserve-newlines">{$t('sidebar.project_submitted_description')}</p>
+                        <button class="submit-another-button" on:click={() => { submissionSuccess = false; submissionError = ''; }}>
+                            <Add size={16} />
+                            {$t('sidebar.submit_another_project')}
+                        </button>
+                    </div>
+                {:else}
+                    <div class="submission-form-container">
+                        <h3>{$t('sidebar.submit_your_project')}</h3>
+                        
+                        {#if submissionError}
+                            <div class="error-message">{submissionError}</div>
+                        {/if}
+
+                        <form class="submission-form" on:submit|preventDefault={submitProject} novalidate>
+                            <div class="form-group">
+                                <label for="project-file">{$t('sidebar.project_file_unipack')} *</label>
+                                <div class="file-input-container">
+                                    <input 
+                                        id="project-file"
+                                        type="file" 
+                                        accept=".zip"
+                                        on:change={handleFileSelect}
+                                        required
+                                    />
+                                    <div class="file-info" on:click={() => document.getElementById('project-file')?.click()}>
+                                        {#if submissionForm.file}
+                                            <span class="file-name">{submissionForm.file.name}</span>
+                                            <span class="file-size">({(submissionForm.file.size / 1024 / 1024).toFixed(1)} MB)</span>
+                                        {:else}
+                                            <span class="file-placeholder">{$t('sidebar.choose_zip_file')}</span>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="project-name">{$t('sidebar.project_name')} *</label>
+                                <input 
+                                    id="project-name"
+                                    type="text" 
+                                    bind:value={submissionForm.name}
+                                    placeholder={$t('sidebar.project_name')}
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="project-author">{$t('sidebar.project_author')} *</label>
+                                <input 
+                                    id="project-author"
+                                    type="text" 
+                                    bind:value={submissionForm.author}
+                                    placeholder={$t('sidebar.project_author')}
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="project-description">{$t('sidebar.project_description')}</label>
+                                <textarea 
+                                    id="project-description"
+                                    bind:value={submissionForm.description}
+                                    placeholder={$t('sidebar.project_description_placeholder')}
+                                    rows="4"
+                                ></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="project-video">{$t('sidebar.project_video_url')}</label>
+                                <input 
+                                    id="project-video"
+                                    type="url" 
+                                    bind:value={submissionForm.videoUrl}
+                                    placeholder={$t('sidebar.project_video_placeholder')}
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="project-email">{$t('sidebar.project_email')} *</label>
+                                <input 
+                                    id="project-email"
+                                    type="email" 
+                                    bind:value={submissionForm.email}
+                                    placeholder={$t('sidebar.project_email_placeholder')}
+                                    required
+                                />
+                                <small class="field-hint">{$t('sidebar.project_email_hint')}</small>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input 
+                                        type="checkbox" 
+                                        bind:checked={submissionForm.authorPermission}
+                                        required
+                                    />
+                                    <span class="checkbox-text">
+                                        {$t('sidebar.author_permission')} *
+                                    </span>
+                                </label>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                class="submit-button {submissionError && !submissionLoading ? 'error' : ''}"
+                                disabled={submissionLoading || !submissionForm.authorPermission}
+                            >
+                                {#if submissionLoading}
+                                    <div class="loading-container">
+                                        <div class="loading-spinner"></div>
+                                        <span class="loading-text">{$t('sidebar.submitting')}</span>
+                                    </div>
+                                {:else if submissionError}
+                                    <span class="error-text">{submissionError}</span>
+                                {:else}
+                                    <Upload size={16} />
+                                    {$t('sidebar.submit_project_button')}
+                                {/if}
+                            </button>
+                        </form>
+                    </div>
+                {/if}
+            </div>
+            {/if}
         </div>
     </div>
 {/if}
@@ -379,6 +690,12 @@
             font-weight: 300;
         }
 
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .close-button {
             background-color: var(--bg2);
             border: 2px solid var(--bg4);
@@ -396,6 +713,47 @@
                 background-color: var(--bg3);
                 border-color: var(--bg4);
                 color: var(--text1);
+            }
+        }
+
+        .submit-project-button, .back-button {
+            background-color: var(--bg2);
+            border: 2px solid var(--bg4);
+            color: var(--text2);
+            cursor: pointer;
+            height: 36px;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+            white-space: nowrap;
+
+            &:hover {
+                background-color: var(--bg3);
+                border-color: var(--bg4);
+                color: var(--text1);
+            }
+
+            span {
+                font-weight: 500;
+            }
+        }
+
+        .submit-project-button {
+            &.active {
+                background-color: #2563EB;
+                border-color: #1d4ed8;
+                color: white;
+
+                &:hover {
+                    background-color: #1d4ed8;
+                    border-color: #1e40af;
+                }
             }
         }
     }
@@ -641,6 +999,7 @@
             cursor: pointer;
             font-size: 14px;
             font-family: "Roboto Mono", monospace;
+            font-weight: 450;
             transition: all 0.2s;
 
             &:hover {
@@ -736,6 +1095,392 @@
                     font-weight: 500;
                     z-index: 1;
                     pointer-events: none;
+                }
+            }
+        }
+    }
+
+
+    // Submission Section Styles
+    .submission-section {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+
+        .auth-required {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text2);
+
+            p {
+                margin: 0 0 8px 0;
+                font-size: 16px;
+            }
+
+            .auth-hint {
+                font-size: 14px;
+                opacity: 0.8;
+            }
+        }
+
+        .submission-form-container, .success-container {
+            max-width: 600px;
+            margin: 0 auto;
+
+            h3 {
+                color: var(--text1);
+                margin: 0 0 24px 0;
+                font-size: 20px;
+                font-weight: 400;
+            }
+
+            h4 {
+                color: var(--text1);
+                margin: 32px 0 16px 0;
+                font-size: 18px;
+                font-weight: 400;
+            }
+        }
+
+        .success-container {
+            text-align: center;
+            padding: 40px 20px;
+
+            .success-icon {
+                color: #22c55e;
+                margin: 0 auto 24px auto;
+                display: flex;
+                justify-content: center;
+            }
+
+            h3 {
+                color: var(--text1);
+                font-size: 24px;
+                font-weight: 500;
+                margin: 0 0 16px 0;
+            }
+
+            p {
+                color: var(--text2);
+                font-size: 16px;
+                line-height: 1.5;
+                margin: 0 0 32px 0;
+
+                &.preserve-newlines {
+                    white-space: pre-line;
+                }
+            }
+
+            .submit-another-button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background-color: #2563EB;
+                border: 2px solid #1d4ed8;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-family: 'Roboto', sans-serif;
+                font-weight: 500;
+                transition: all 0.2s;
+                margin: 0 auto;
+
+                &:hover {
+                    background-color: #1d4ed8;
+                    border-color: #1e40af;
+                }
+
+                &:active {
+                    transform: translateY(1px);
+                }
+            }
+        }
+
+        .submission-form {
+            .form-group {
+                margin-bottom: 20px;
+
+                label {
+                    display: block;
+                    color: var(--text1);
+                    font-size: 14px;
+                    font-weight: 500;
+                    margin-bottom: 8px;
+                }
+
+                input, textarea {
+                    width: 100%;
+                    background-color: var(--bg2);
+                    border: 2px solid var(--bg3);
+                    border-radius: 8px;
+                    padding: 12px;
+                    color: var(--text1);
+                    font-size: 14px;
+                    font-family: 'Roboto', sans-serif;
+                    transition: border-color 0.2s;
+                    box-sizing: border-box;
+
+                    &:focus {
+                        outline: none;
+                        border-color: var(--bg4);
+                    }
+
+                    &::placeholder {
+                        color: var(--text2);
+                    }
+                }
+
+                textarea {
+                    resize: vertical;
+                    min-height: 100px;
+                }
+
+                .field-hint {
+                    display: block;
+                    color: var(--text2);
+                    font-size: 12px;
+                    margin-top: 4px;
+                    font-style: italic;
+                }
+            }
+
+            .checkbox-group {
+                .checkbox-label {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
+                    cursor: pointer;
+                    margin-bottom: 0;
+
+                    input[type="checkbox"] {
+                        width: auto;
+                        margin: 0;
+                        margin-top: 2px;
+                        flex-shrink: 0;
+                    }
+
+                    .checkbox-text {
+                        color: var(--text1);
+                        font-size: 14px;
+                        line-height: 1.4;
+                    }
+                }
+            }
+
+            .file-input-container {
+                input[type="file"] {
+                    display: none;
+                }
+
+                .file-info {
+                    background-color: var(--bg2);
+                    border: 2px solid var(--bg3);
+                    border-radius: 8px;
+                    padding: 12px;
+                    cursor: pointer;
+                    transition: border-color 0.2s;
+                    position: relative;
+
+                    &:hover {
+                        border-color: var(--bg4);
+                    }
+
+                    .file-name {
+                        color: var(--text1);
+                        font-weight: 500;
+                    }
+
+                    .file-size {
+                        color: var(--text2);
+                        font-size: 12px;
+                        margin-left: 8px;
+                    }
+
+                    .file-placeholder {
+                        color: var(--text2);
+                    }
+                }
+            }
+
+
+            .submit-button {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background-color: #2563EB;
+                border: 2px solid #1d4ed8;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                font-family: 'Roboto', sans-serif;
+                font-weight: 500;
+                transition: all 0.2s;
+                margin-top: 24px;
+                min-height: 56px;
+
+                &:hover:not(:disabled) {
+                    background-color: #1d4ed8;
+                    border-color: #1e40af;
+                }
+
+                &:disabled {
+                    background-color: var(--bg3);
+                    border-color: var(--bg4);
+                    color: var(--text2);
+                    cursor: not-allowed;
+                    opacity: 1;
+                }
+
+                &.error {
+                    background-color: #dc2626;
+                    border-color: #b91c1c;
+                    color: white;
+                    cursor: pointer;
+
+                    &:hover:not(:disabled) {
+                        background-color: #b91c1c;
+                        border-color: #991b1b;
+                    }
+                }
+
+                .loading-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+
+                    .loading-spinner {
+                        width: 20px;
+                        height: 20px;
+                        border: 2px solid rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        border-top-color: white;
+                        animation: spin 1s ease-in-out infinite;
+                    }
+
+                    .loading-text {
+                        font-size: 14px;
+                        font-weight: 500;
+                        white-space: nowrap;
+                    }
+                }
+
+                .error-text {
+                    font-size: 14px;
+                    font-weight: 500;
+                    text-align: center;
+                    line-height: 1.3;
+                }
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+        }
+
+        .success-message {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .user-submissions {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--bg3);
+
+            .submission-card {
+                background-color: var(--bg2);
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 12px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+
+                .submission-info {
+                    flex: 1;
+
+                    h5 {
+                        color: var(--text1);
+                        margin: 0 0 8px 0;
+                        font-size: 16px;
+                        font-weight: 500;
+                    }
+
+                    p {
+                        margin: 0 0 4px 0;
+                        font-size: 14px;
+                    }
+
+                    .submission-status {
+                        font-weight: 500;
+
+                        &.status-pending {
+                            color: #f59e0b;
+                        }
+
+                        &.status-approved {
+                            color: #22c55e;
+                        }
+
+                        &.status-rejected {
+                            color: #ef4444;
+                        }
+                    }
+
+                    .submission-date {
+                        color: var(--text2);
+                    }
+
+                    .admin-notes {
+                        color: var(--text2);
+                        font-style: italic;
+                        margin-top: 8px;
+                    }
+                }
+
+                .submission-actions {
+                    .status-badge {
+                        padding: 4px 12px;
+                        border-radius: 16px;
+                        font-size: 12px;
+                        font-weight: 500;
+                        text-transform: uppercase;
+
+                        &.status-pending {
+                            background-color: rgba(245, 158, 11, 0.1);
+                            color: #f59e0b;
+                            border: 1px solid rgba(245, 158, 11, 0.3);
+                        }
+
+                        &.status-approved {
+                            background-color: rgba(34, 197, 94, 0.1);
+                            color: #22c55e;
+                            border: 1px solid rgba(34, 197, 94, 0.3);
+                        }
+
+                        &.status-rejected {
+                            background-color: rgba(239, 68, 68, 0.1);
+                            color: #ef4444;
+                            border: 1px solid rgba(239, 68, 68, 0.3);
+                        }
+                    }
                 }
             }
         }

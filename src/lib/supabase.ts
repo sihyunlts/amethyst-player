@@ -31,3 +31,21 @@ export interface PublicProject {
   download_count?: number
   tags?: string[]
 }
+
+export interface SubmittedProject {
+  id: string
+  name: string
+  author: string
+  author_email?: string
+  user_id: string
+  description: string
+  file_url: string
+  video_url?: string | null
+  tags?: string[]
+  status: 'pending' | 'approved' | 'rejected'
+  admin_notes?: string | null
+  file_size?: number
+  created_at: string
+  reviewed_at?: string | null
+  reviewed_by?: string | null
+}
