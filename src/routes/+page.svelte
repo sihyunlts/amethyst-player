@@ -567,6 +567,8 @@
         activeConfig: undefined,
     };
 
+    let webMidiAvailable = false;
+
     if (browser) {
         // Check if this is first time user
         if (!localStorage.getItem("amethyst_tutorial_completed")) {
@@ -578,6 +580,8 @@
             settings = JSON.parse(localStorage.getItem("settings")!);
 
             GridController.start(deviceEvent).then((midi_available) => {
+                webMidiAvailable = midi_available;
+                
                 if (midi_available) {
                     toast.push(
                         $t("toast.webmidi_available"),
@@ -851,7 +855,19 @@
                 </div>
 
                 <div class="settings-content">
-                    {#if !settings.deviceSettingAdvanced}
+                    {#if !webMidiAvailable}
+                        <div class="webmidi-unavailable-container">
+                            <div class="error-icon">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="15" y1="9" x2="9" y2="15"/>
+                                    <line x1="9" y1="9" x2="15" y2="15"/>
+                                </svg>
+                            </div>
+                            <h3>{$t('device.webmidi_unavailable_title')}</h3>
+                            <p class="preserve-newlines">{$t('device.webmidi_unavailable_description')}</p>
+                        </div>
+                    {:else if !settings.deviceSettingAdvanced}
                         <div class="setting {mobileView? 'mobile' : ''}">
                             <div class="setting-name">
                                 <span>{$t("device.midi_device")}</span>
@@ -937,42 +953,44 @@
                         </div>
                     {/if}
 
-                    <div class="setting {mobileView? 'mobile' : ''}">
-                        <div class="setting-name">
-                            <span>{$t("device.midi_device_config")}</span>
+                    {#if webMidiAvailable}
+                        <div class="setting {mobileView? 'mobile' : ''}">
+                            <div class="setting-name">
+                                <span>{$t("device.midi_device_config")}</span>
+                            </div>
+
+                            <div class="setting-option">
+                                <Dropdown
+                                        value={reactiveVars.activeConfig}
+                                        options={Object.keys(GridController.configList())}
+                                        placeholder={$t("device.no_config")}
+                                        on:change={(e) => {
+                                        settings.deviceConfig = e.detail.value;
+                                        if (e.detail.value) {
+                                            midiDeviceInfos[0] = undefined;
+                                            midiDevices[0].connect(
+                                                midiDevices[0].activeInput,
+                                                midiDevices[0].activeOutput,
+                                                GridController.configList()[e.detail.value]
+                                            );
+                                        } else {
+                                            midiDevices[0].disconnect();
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
 
-                        <div class="setting-option">
-                            <Dropdown
-                                    value={reactiveVars.activeConfig}
-                                    options={Object.keys(GridController.configList())}
-                                    placeholder={$t("device.no_config")}
-                                    on:change={(e) => {
-                                    settings.deviceConfig = e.detail.value;
-                                    if (e.detail.value) {
-                                        midiDeviceInfos[0] = undefined;
-                                        midiDevices[0].connect(
-                                            midiDevices[0].activeInput,
-                                            midiDevices[0].activeOutput,
-                                            GridController.configList()[e.detail.value]
-                                        );
-                                    } else {
-                                        midiDevices[0].disconnect();
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
+                        <div class="setting {mobileView? 'mobile' : ''}">
+                            <div class="setting-name">
+                                <span>{$t("device.advanced_mode")}</span>
+                            </div>
 
-                    <div class="setting {mobileView? 'mobile' : ''}">
-                        <div class="setting-name">
-                            <span>{$t("device.advanced_mode")}</span>
+                            <div class="setting-option">
+                                <Switch bind:checked={settings.deviceSettingAdvanced}/>
+                            </div>
                         </div>
-
-                        <div class="setting-option">
-                            <Switch bind:checked={settings.deviceSettingAdvanced}/>
-                        </div>
-                    </div>
+                    {/if}
                 </div>
             </div>
         </div>
@@ -1340,6 +1358,48 @@
             font-family: inherit !important;
             font-size: inherit !important;
             font-weight: 500;
+        }
+    }
+
+    .webmidi-unavailable-container {
+        text-align: center;
+        padding: 40px 20px;
+
+        .error-icon {
+            color: #ef4444;
+            margin: 0 auto 24px auto;
+            display: flex;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        h3 {
+            color: var(--text1);
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0 0 16px 0;
+        }
+
+        p {
+            color: var(--text2);
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .preserve-newlines {
+            white-space: pre-line;
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
         }
     }
 
