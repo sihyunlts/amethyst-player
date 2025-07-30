@@ -216,7 +216,7 @@
         </div>
 
         <div class="icon-button">
-            <div on:click={() => goto("https://discord.gg/Aw99cAgmDA")}>
+            <div on:click={() => window.open("https://discord.gg/Aw99cAgmDA", "_blank")}>
                 <LogoDiscord size={32}></LogoDiscord>
             </div>
         </div>

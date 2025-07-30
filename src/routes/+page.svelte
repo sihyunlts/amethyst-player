@@ -725,9 +725,9 @@
         </div>
     {/if}
 
-    <Popup bind:mobile={mobileView} bind:show={popup["setting"]} clearPopup={true}>
-        <div class="settings-overlay">
-            <div class="settings-modal">
+    {#if popup["setting"]}
+        <div class="settings-overlay" on:click={() => popup["setting"] = false}>
+            <div class="settings-modal" on:click|stopPropagation>
                 <div class="modal-header">
                     <h2>{$t("setting.settings")}</h2>
                     <div class="header-buttons">
@@ -840,11 +840,11 @@
                 </div>
             </div>
         </div>
-    </Popup>
+    {/if}
 
-    <Popup bind:mobile={mobileView} bind:show={popup["devices"]} clearPopup={true}>
-        <div class="settings-overlay">
-            <div class="settings-modal">
+    {#if popup["devices"]}
+        <div class="settings-overlay" on:click={() => popup["devices"] = false}>
+            <div class="settings-modal" on:click|stopPropagation>
                 <div class="modal-header">
                     <h2>{$t("device.device")}</h2>
                     <div class="header-buttons">
@@ -994,11 +994,11 @@
                 </div>
             </div>
         </div>
-    </Popup>
+    {/if}
 
-    <Popup bind:mobile={mobileView} bind:show={popup["demoplay"]} clearPopup={true}>
-        <div class="settings-overlay">
-            <div class="settings-modal">
+    {#if popup["demoplay"]}
+        <div class="settings-overlay" on:click={() => popup["demoplay"] = false}>
+            <div class="settings-modal" on:click|stopPropagation>
                 <div class="modal-header">
                     <h2>{$t("demoplay.demoplay")}</h2>
                     <div class="header-buttons">
@@ -1073,7 +1073,7 @@
                 </div>
             </div>
         </div>
-    </Popup>
+    {/if}
 
     {#if popup["projectStore"]}
         {#await import("../components/ProjectStore.svelte") then ProjectStoreModule}
