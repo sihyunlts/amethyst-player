@@ -84,7 +84,7 @@
 
             transition: background-color 0.2s ease;
             background-color: var(--bg3);
-            border: 2px solid var(--bg4);
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
 
             color: var(--text1);
 
@@ -107,8 +107,9 @@
             display: flex;
             justify-content: center;
             gap: 0.5em;
+            padding: 8px 0;
 
-            overflow: hidden;
+            overflow: visible;
 
             .layer {
                 min-width: 30px;
@@ -116,8 +117,8 @@
                 height: 40px;
 
                 background-color: var(--bg3);
-                border: 2px solid var(--bg4);
                 cursor: pointer;
+                box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
 
                 border-radius: 5px;
 

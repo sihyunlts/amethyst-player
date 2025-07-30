@@ -126,6 +126,7 @@ export function setColor(keyID: KeyID, color: Color) {
         background: var(--device-body);
         border: 2px solid var(--device-border);
         border-radius: 2%;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
 
         position: relative;
 

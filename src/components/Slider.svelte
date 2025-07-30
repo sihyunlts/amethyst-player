@@ -47,10 +47,11 @@
             &::-webkit-slider-thumb {
                 -webkit-appearance: none;
                 appearance: none;
-                width: 10px;
-                height: 18px;
-                border-radius: 5px;
-                background-color: white;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background-color: var(--bg3);
+                box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
                 cursor: pointer;
                     
                 transition: left 0.3s ease; /* Adjust time and easing to your preference */
@@ -66,10 +67,11 @@
             }
 
             &::-moz-range-thumb {
-                width: 10px;
-                height: 18px;
-                border-radius: 5px;
-                background-color: white;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background-color: var(--bg3);
+                box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
                 cursor: pointer;
 
                 &:hover {
