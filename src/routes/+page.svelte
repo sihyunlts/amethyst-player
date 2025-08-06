@@ -57,10 +57,12 @@
         virtualDevice: Object.keys(virtualDeviceComponents)[0],
         virtualDeviceScale: "100%",
         projectEngine: "Unipack", //Object.keys(projectEngines)[0],
-        deviceInput: undefined,
-        deviceOutput: undefined,
-        deviceConfig: undefined,
-        deviceSettingAdvanced: false,
+        devices: [
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false }
+        ],
         language: undefined,
         keypressColor: Object.keys(keyPressColors)[0],
     };
@@ -141,6 +143,69 @@
 
     let midiDevices: GridController[] = [];
     let midiDeviceInfos: DeviceInfoCanvas = [];
+    let selectedDeviceIndex = 0;
+    let selectedDeviceTab = "1";
+    
+    // Reactive property for current device's advanced mode
+    $: currentDeviceAdvancedMode = reactiveVars[selectedDeviceIndex]?.deviceSettingAdvanced || false;
+    
+    // Update currentDeviceAdvancedMode when it changes
+    $: if (currentDeviceAdvancedMode !== (reactiveVars[selectedDeviceIndex]?.deviceSettingAdvanced || false)) {
+        if (reactiveVars[selectedDeviceIndex]) {
+            reactiveVars[selectedDeviceIndex].deviceSettingAdvanced = currentDeviceAdvancedMode;
+            settings.devices[selectedDeviceIndex].deviceSettingAdvanced = currentDeviceAdvancedMode;
+        }
+    }
+    
+    // Function to sync reactive vars with saved settings
+    const syncReactiveVarsWithSettings = (deviceIndex) => {
+        if (!reactiveVars[deviceIndex]) {
+            console.log('ERROR: reactiveVars[' + deviceIndex + '] is undefined');
+            return;
+        }
+        
+        const deviceSettings = settings.devices[deviceIndex];
+        console.log('Syncing device', deviceIndex, 'with settings:', deviceSettings);
+        
+        // Always start with saved settings first
+        reactiveVars[deviceIndex].activeDevice = deviceSettings?.deviceInput || deviceSettings?.deviceOutput;
+        reactiveVars[deviceIndex].activeInput = deviceSettings?.deviceInput;
+        reactiveVars[deviceIndex].activeOutput = deviceSettings?.deviceOutput;
+        reactiveVars[deviceIndex].activeConfig = deviceSettings?.deviceConfig;
+        reactiveVars[deviceIndex].deviceSettingAdvanced = deviceSettings?.deviceSettingAdvanced || false;
+        
+        console.log('Set reactive vars to saved settings:', reactiveVars[deviceIndex]);
+        
+        // If device is also connected, update with live MIDI device info
+        if (midiDevices[deviceIndex]?.outputReady()) {
+            console.log('Device is connected, updating with live info');
+            reactiveVars[deviceIndex].activeDevice = midiDevices[deviceIndex]?.name;
+            reactiveVars[deviceIndex].activeInput = midiDevices[deviceIndex]?.activeInput?.name;
+            reactiveVars[deviceIndex].activeOutput = midiDevices[deviceIndex]?.activeOutput?.name;
+            reactiveVars[deviceIndex].activeConfig = midiDevices[deviceIndex]?.activeConfig?.name;
+            // Keep the saved advanced mode setting even when connected
+        }
+        
+        // Force Svelte reactivity by reassigning the array
+        reactiveVars = [...reactiveVars];
+        console.log('Final reactive vars after sync:', reactiveVars[deviceIndex]);
+    };
+    
+    // Reactive statement to handle device tab changes
+    $: if (selectedDeviceTab) {
+        selectedDeviceIndex = parseInt(selectedDeviceTab) - 1;
+        console.log('=== DEVICE SWITCH DEBUG ===');
+        console.log('Selected device tab:', selectedDeviceTab);
+        console.log('Selected device index:', selectedDeviceIndex);
+        console.log('Current settings for device:', settings.devices[selectedDeviceIndex]);
+        console.log('Current reactive vars for device (before sync):', reactiveVars[selectedDeviceIndex]);
+        
+        // Sync reactive vars with current state
+        syncReactiveVarsWithSettings(selectedDeviceIndex);
+        
+        console.log('Current reactive vars for device (after sync):', reactiveVars[selectedDeviceIndex]);
+        console.log('=== END DEBUG ===');
+    }
 
     const deviceKeyPressed: KeyPress = (deviceID: number, keyID: KeyID) => {
         console.info(`Device ${deviceID} Button ${keyID} has been pressed`);
@@ -167,13 +232,16 @@
                     pos: [0, 0],
                     info: midiDevices[event.deviceID].getDeviceInfo(),
                 };
-                reactiveVars.activeDevice = midiDevices[event.deviceID]?.name;
-                reactiveVars.activeInput =
-                    midiDevices[event.deviceID]?.activeInput?.name;
-                reactiveVars.activeOutput =
-                    midiDevices[event.deviceID]?.activeOutput?.name;
-                reactiveVars.activeConfig =
-                    midiDevices[event.deviceID]?.activeConfig?.name;
+                // Update reactive vars for this device
+                if (reactiveVars[event.deviceID]) {
+                    reactiveVars[event.deviceID].activeDevice = midiDevices[event.deviceID]?.name;
+                    reactiveVars[event.deviceID].activeInput =
+                        midiDevices[event.deviceID]?.activeInput?.name;
+                    reactiveVars[event.deviceID].activeOutput =
+                        midiDevices[event.deviceID]?.activeOutput?.name;
+                    reactiveVars[event.deviceID].activeConfig =
+                        midiDevices[event.deviceID]?.activeConfig?.name;
+                }
                 toast.push(
                     $t("toast.is_now_the_active_device", {
                         device_name: midiDeviceInfos[event.deviceID].name,
@@ -204,27 +272,36 @@
                     );
                 }
                 midiDeviceInfos[event.deviceID] = undefined;
-                reactiveVars.activeDevice = undefined;
-                reactiveVars.activeInput = undefined;
-                reactiveVars.activeOutput = undefined;
-                reactiveVars.activeConfig = undefined;
+                // Clear reactive vars for this device
+                if (reactiveVars[event.deviceID]) {
+                    reactiveVars[event.deviceID].activeDevice = undefined;
+                    reactiveVars[event.deviceID].activeInput = undefined;
+                    reactiveVars[event.deviceID].activeOutput = undefined;
+                    reactiveVars[event.deviceID].activeConfig = undefined;
+                }
                 break;
 
             case "connected":
-                if (event.device == settings.deviceInput) {
-                    toast.push(
-                        $t("toast.connected", {device_name: event.device})
-                    );
-                    midiDevices[0].connect(
-                        GridController.availableDeviceInputs()[event.device],
-                        GridController.availableDeviceOutputs()[event.device],
-                        settings.deviceConfig
-                    );
-                } else {
+                // Check if this device matches any of our configured devices
+                let deviceFound = false;
+                for (let i = 0; i < 4; i++) {
+                    if (event.device == settings.devices[i].deviceInput) {
+                        toast.push(
+                            $t("toast.connected", {device_name: event.device})
+                        );
+                        midiDevices[i].connect(
+                            GridController.availableDeviceInputs()[event.device],
+                            GridController.availableDeviceOutputs()[event.device],
+                            settings.devices[i].deviceConfig
+                        );
+                        deviceFound = true;
+                        break;
+                    }
+                }
+                if (!deviceFound) {
                     toast.push(
                         $t("toast.detected", {device_name: event.device})
                     );
-                    // toast.push(`${event.device} connected\nClick to set it as the active device`);
                 }
                 break;
 
@@ -355,7 +432,10 @@
         }
 	}
 
-    midiDevices[0] = new GridController(0, deviceKeyPressed, deviceKeyReleased);
+    // Initialize 4 MIDI device controllers
+    for (let i = 0; i < 4; i++) {
+        midiDevices[i] = new GridController(i, deviceKeyPressed, deviceKeyReleased);
+    }
 
     const loadProject = () => {
         console.log("Load File Selector");
@@ -560,16 +640,23 @@
         options: options
     };
 
-    let reactiveVars = {
-        activeDevice: undefined,
-        activeInput: undefined,
-        activeOutput: undefined,
-        activeConfig: undefined,
-    };
+    let reactiveVars = [
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false }
+    ];
 
     let webMidiAvailable = false;
 
     if (browser) {
+        console.log('=== INITIAL LOAD DEBUG ===');
+        console.log('Initial settings:', settings);
+        console.log('Initial reactiveVars:', reactiveVars);
+        console.log('Initial selectedDeviceTab:', selectedDeviceTab);
+        console.log('Initial selectedDeviceIndex:', selectedDeviceIndex);
+        console.log('=== END INITIAL DEBUG ===');
+        
         // Check if this is first time user
         if (!localStorage.getItem("amethyst_tutorial_completed")) {
             showSidebar = true;
@@ -577,7 +664,29 @@
         }
 
         if (localStorage.getItem("settings")) {
-            settings = JSON.parse(localStorage.getItem("settings")!);
+            const savedSettings = JSON.parse(localStorage.getItem("settings")!);
+            // Migrate old settings format to new multi-device format
+            if (savedSettings.deviceInput !== undefined) {
+                settings.devices[0].deviceInput = savedSettings.deviceInput;
+                settings.devices[0].deviceOutput = savedSettings.deviceOutput;
+                settings.devices[0].deviceConfig = savedSettings.deviceConfig;
+                settings.devices[0].deviceSettingAdvanced = savedSettings.deviceSettingAdvanced || false;
+                delete savedSettings.deviceInput;
+                delete savedSettings.deviceOutput;
+                delete savedSettings.deviceConfig;
+                delete savedSettings.deviceSettingAdvanced;
+            }
+            // Also migrate standalone deviceSettingAdvanced if it exists
+            if (savedSettings.deviceSettingAdvanced !== undefined && savedSettings.devices) {
+                // Apply to all devices if not already migrated
+                for (let i = 0; i < 4; i++) {
+                    if (settings.devices[i].deviceSettingAdvanced === undefined) {
+                        settings.devices[i].deviceSettingAdvanced = savedSettings.deviceSettingAdvanced;
+                    }
+                }
+                delete savedSettings.deviceSettingAdvanced;
+            }
+            settings = { ...settings, ...savedSettings };
 
             GridController.start(deviceEvent).then((midi_available) => {
                 webMidiAvailable = midi_available;
@@ -593,11 +702,17 @@
                             },
                         }
                     );
-                    midiDevices[0].connect(
-                        GridController.availableDeviceInputs()[settings.deviceInput!],
-                        GridController.availableDeviceOutputs()[settings.deviceOutput!],
-                        GridController.configList()[settings.deviceConfig!]
-                    );
+                    // Connect all configured devices
+                    for (let i = 0; i < 4; i++) {
+                        const device = settings.devices[i];
+                        if (device.deviceInput && device.deviceOutput) {
+                            midiDevices[i].connect(
+                                GridController.availableDeviceInputs()[device.deviceInput],
+                                GridController.availableDeviceOutputs()[device.deviceOutput],
+                                GridController.configList()[device.deviceConfig!]
+                            );
+                        }
+                    }
                 } else {
                     toast.push(
                         $t("toast.webmidi_unavailable"),
@@ -626,8 +741,8 @@
 
     onMount(() => {
             setInterval(() => {
-                if (reactiveVars.activeConfig != midiDevices[0]?.activeConfig?.name)
-                    reactiveVars.activeConfig = midiDevices[0]?.activeConfig?.name;
+                if (reactiveVars[selectedDeviceIndex] && reactiveVars[selectedDeviceIndex].activeConfig != midiDevices[selectedDeviceIndex]?.activeConfig?.name)
+                    reactiveVars[selectedDeviceIndex].activeConfig = midiDevices[selectedDeviceIndex]?.activeConfig?.name;
             }, 1000 / 30);
         }
     );
@@ -848,6 +963,12 @@
                 <div class="modal-header">
                     <h2>{$t("device.device")}</h2>
                     <div class="header-buttons">
+                        <div class="device-selector-header">
+                            <Multibutton 
+                                options={["1", "2", "3", "4"]}
+                                bind:value={selectedDeviceTab}
+                            />
+                        </div>
                         <button class="close-button" on:click={() => popup["devices"] = false}>
                             <Close size={24} />
                         </button>
@@ -867,128 +988,147 @@
                             <h3>{$t('device.webmidi_unavailable_title')}</h3>
                             <p class="preserve-newlines">{$t('device.webmidi_unavailable_description')}</p>
                         </div>
-                    {:else if !settings.deviceSettingAdvanced}
-                        <div class="setting {mobileView? 'mobile' : ''}">
-                            <div class="setting-name">
-                                <span>{$t("device.midi_device")}</span>
-                            </div>
-
-                            <div class="setting-option">
-                                <Dropdown
-                                        value={reactiveVars.activeDevice}
-                                        options={Object.keys(
-                                        GridController.availableDevices()
-                                    )}
-                                        placeholder={$t("device.no_device")}
-                                        on:change={(e) => {
-                                        settings.deviceInput = e.detail.value;
-                                        settings.deviceOutput = e.detail.value;
-                                        if (e.detail.value) {
-                                            midiDeviceInfos[0] = undefined;
-                                            midiDevices[0].connectDevice(
-                                                GridController.availableDevices()[
-                                                    e.detail.value
-                                                ]
-                                            );
-                                        } else {
-                                            midiDevices[0].disconnect();
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
                     {:else}
-                        <div class="setting {mobileView? 'mobile' : ''}">
-                            <div class="setting-name">
-                                <span>{$t("device.midi_input_device")}</span>
-                            </div>
 
-                            <div class="setting-option">
-                                <Dropdown
-                                        value={reactiveVars.activeInput}
-                                        options={Object.keys(
-                                        GridController.availableDeviceInputs()
-                                    )}
-                                        placeholder={$t("device.no_device")}
-                                        on:change={(e) => {
-                                        settings.deviceInput = e.detail.value;
-                                        midiDeviceInfos[0] = undefined;
-                                        midiDevices[0].connect(
-                                            GridController.availableDeviceInputs()[
-                                                e.detail.value
-                                            ],
-                                            midiDevices[0].activeOutput,
-                                            midiDevices[0].activeConfig
-                                        );
-                                    }}
-                                />
-                            </div>
-                        </div>
+                        <!-- Device settings for selected device -->
+                        <div class="device-settings">
+                                    {#if !currentDeviceAdvancedMode}
+                                        <div class="setting {mobileView? 'mobile' : ''}">
+                                            <div class="setting-name">
+                                                <span>{$t("device.midi_device")}</span>
+                                            </div>
 
-                        <div class="setting {mobileView? 'mobile' : ''}">
-                            <div class="setting-name">
-                                <span>{$t("device.midi_output_device")}</span>
-                            </div>
+                                            <div class="setting-option">
+                                                <Dropdown
+                                                        value={reactiveVars[selectedDeviceIndex]?.activeDevice}
+                                                        options={Object.keys(
+                                                        GridController.availableDevices()
+                                                    )}
+                                                        placeholder={$t("device.no_device")}
+                                                        on:change={(e) => {
+                                                        console.log('Device dropdown changed:', e.detail.value, 'for device index:', selectedDeviceIndex);
+                                                        settings.devices[selectedDeviceIndex].deviceInput = e.detail.value;
+                                                        settings.devices[selectedDeviceIndex].deviceOutput = e.detail.value;
+                                                        console.log('Updated settings.devices[' + selectedDeviceIndex + ']:', settings.devices[selectedDeviceIndex]);
+                                                        if (e.detail.value) {
+                                                            midiDeviceInfos[selectedDeviceIndex] = undefined;
+                                                            midiDevices[selectedDeviceIndex].connectDevice(
+                                                                GridController.availableDevices()[
+                                                                    e.detail.value
+                                                                ]
+                                                            );
+                                                        } else {
+                                                            midiDevices[selectedDeviceIndex].disconnect();
+                                                        }
+                                                        // Sync UI with updated settings
+                                                        syncReactiveVarsWithSettings(selectedDeviceIndex);
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    {:else}
+                                        <div class="setting {mobileView? 'mobile' : ''}">
+                                            <div class="setting-name">
+                                                <span>{$t("device.midi_input_device")}</span>
+                                            </div>
 
-                            <div class="setting-option">
-                                <Dropdown
-                                        value={reactiveVars.activeOutput}
-                                        options={Object.keys(
-                                        GridController.availableDeviceOutputs()
-                                    )}
-                                        placeholder={$t("device.no_device")}
-                                        on:change={(e) => {
-                                        settings.deviceOutput = e.detail.value;
-                                        midiDeviceInfos[0] = undefined;
-                                        midiDevices[0].connect(
-                                            midiDevices[0].activeInput,
-                                            GridController.availableDeviceOutputs()[
-                                                e.detail.value
-                                            ],
-                                            midiDevices[0].activeConfig
-                                        );
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    {/if}
+                                            <div class="setting-option">
+                                                <Dropdown
+                                                        value={reactiveVars[selectedDeviceIndex]?.activeInput}
+                                                        options={Object.keys(
+                                                        GridController.availableDeviceInputs()
+                                                    )}
+                                                        placeholder={$t("device.no_device")}
+                                                        on:change={(e) => {
+                                                        settings.devices[selectedDeviceIndex].deviceInput = e.detail.value;
+                                                        midiDeviceInfos[selectedDeviceIndex] = undefined;
+                                                        midiDevices[selectedDeviceIndex].connect(
+                                                            GridController.availableDeviceInputs()[
+                                                                e.detail.value
+                                                            ],
+                                                            midiDevices[selectedDeviceIndex].activeOutput,
+                                                            midiDevices[selectedDeviceIndex].activeConfig
+                                                        );
+                                                        syncReactiveVarsWithSettings(selectedDeviceIndex);
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
 
-                    {#if webMidiAvailable}
-                        <div class="setting {mobileView? 'mobile' : ''}">
-                            <div class="setting-name">
-                                <span>{$t("device.midi_device_config")}</span>
-                            </div>
+                                        <div class="setting {mobileView? 'mobile' : ''}">
+                                            <div class="setting-name">
+                                                <span>{$t("device.midi_output_device")}</span>
+                                            </div>
 
-                            <div class="setting-option">
-                                <Dropdown
-                                        value={reactiveVars.activeConfig}
-                                        options={Object.keys(GridController.configList())}
-                                        placeholder={$t("device.no_config")}
-                                        on:change={(e) => {
-                                        settings.deviceConfig = e.detail.value;
-                                        if (e.detail.value) {
-                                            midiDeviceInfos[0] = undefined;
-                                            midiDevices[0].connect(
-                                                midiDevices[0].activeInput,
-                                                midiDevices[0].activeOutput,
-                                                GridController.configList()[e.detail.value]
-                                            );
-                                        } else {
-                                            midiDevices[0].disconnect();
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
+                                            <div class="setting-option">
+                                                <Dropdown
+                                                        value={reactiveVars[selectedDeviceIndex]?.activeOutput}
+                                                        options={Object.keys(
+                                                        GridController.availableDeviceOutputs()
+                                                    )}
+                                                        placeholder={$t("device.no_device")}
+                                                        on:change={(e) => {
+                                                        settings.devices[selectedDeviceIndex].deviceOutput = e.detail.value;
+                                                        midiDeviceInfos[selectedDeviceIndex] = undefined;
+                                                        midiDevices[selectedDeviceIndex].connect(
+                                                            midiDevices[selectedDeviceIndex].activeInput,
+                                                            GridController.availableDeviceOutputs()[
+                                                                e.detail.value
+                                                            ],
+                                                            midiDevices[selectedDeviceIndex].activeConfig
+                                                        );
+                                                        syncReactiveVarsWithSettings(selectedDeviceIndex);
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    {/if}
 
-                        <div class="setting {mobileView? 'mobile' : ''}">
-                            <div class="setting-name">
-                                <span>{$t("device.advanced_mode")}</span>
-                            </div>
+                                    <div class="setting {mobileView? 'mobile' : ''}">
+                                        <div class="setting-name">
+                                            <span>{$t("device.midi_device_config")}</span>
+                                        </div>
 
-                            <div class="setting-option">
-                                <Switch bind:checked={settings.deviceSettingAdvanced}/>
-                            </div>
+                                        <div class="setting-option">
+                                            <Dropdown
+                                                    value={reactiveVars[selectedDeviceIndex]?.activeConfig}
+                                                    options={Object.keys(GridController.configList())}
+                                                    placeholder={$t("device.no_config")}
+                                                    on:change={(e) => {
+                                                    settings.devices[selectedDeviceIndex].deviceConfig = e.detail.value;
+                                                    if (e.detail.value) {
+                                                        midiDeviceInfos[selectedDeviceIndex] = undefined;
+                                                        midiDevices[selectedDeviceIndex].connect(
+                                                            midiDevices[selectedDeviceIndex].activeInput,
+                                                            midiDevices[selectedDeviceIndex].activeOutput,
+                                                            GridController.configList()[e.detail.value]
+                                                        );
+                                                    } else {
+                                                        midiDevices[selectedDeviceIndex].disconnect();
+                                                    }
+                                                    syncReactiveVarsWithSettings(selectedDeviceIndex);
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="setting {mobileView? 'mobile' : ''}">
+                                        <div class="setting-name">
+                                            <span>{$t("device.advanced_mode")}</span>
+                                        </div>
+
+                                        <div class="setting-option">
+                                            <Switch 
+                                            bind:checked={currentDeviceAdvancedMode}
+                                            on:change={(e) => {
+                                                settings.devices[selectedDeviceIndex].deviceSettingAdvanced = e.detail.checked;
+                                                reactiveVars[selectedDeviceIndex].deviceSettingAdvanced = e.detail.checked;
+                                                reactiveVars = [...reactiveVars]; // Force reactivity
+                                                console.log('Advanced mode changed for device', selectedDeviceIndex, ':', e.detail.checked);
+                                            }}
+                                        />
+                                        </div>
+                                    </div>
                         </div>
                     {/if}
                 </div>
@@ -1260,6 +1400,17 @@
             gap: 10px;
             align-items: center;
         }
+        
+        .device-selector-header {
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    .device-settings {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
 
         .close-button {
             background-color: inherit;
@@ -1360,6 +1511,7 @@
             font-weight: 500;
         }
     }
+
 
     .webmidi-unavailable-container {
         text-align: center;
