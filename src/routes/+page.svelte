@@ -10,6 +10,7 @@
 
     import {projectEngines} from "../engine/Engines";
     import {GridController} from "../hardware/hardware";
+    import { WebMidi } from "webmidi";
 
     import Information from "carbon-icons-svelte/lib/Information.svelte";
     import Close from "carbon-icons-svelte/lib/Close.svelte";
@@ -58,10 +59,10 @@
         virtualDeviceScale: "100%",
         projectEngine: "Unipack", //Object.keys(projectEngines)[0],
         devices: [
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false },
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false },
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false },
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false }
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true }
         ],
         language: undefined,
         keypressColor: Object.keys(keyPressColors)[0],
@@ -145,17 +146,77 @@
     let midiDeviceInfos: DeviceInfoCanvas = [];
     let selectedDeviceIndex = 0;
     let selectedDeviceTab = "1";
+    let deviceListUpdateTrigger = 0; // Increment this to force device list updates
     
-    // Reactive property for current device's advanced mode
+    // Reactive property for current device's advanced mode (read-only)
     $: currentDeviceAdvancedMode = reactiveVars[selectedDeviceIndex]?.deviceSettingAdvanced || false;
     
-    // Update currentDeviceAdvancedMode when it changes
-    $: if (currentDeviceAdvancedMode !== (reactiveVars[selectedDeviceIndex]?.deviceSettingAdvanced || false)) {
+    // Reactive device lists that update when devices connect/disconnect
+    $: availableDevices = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getMergedDeviceList()) : [];
+    $: availableInputs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getMergedDeviceList('inputs')) : [];
+    $: availableOutputs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getMergedDeviceList('outputs')) : [];
+    $: availableConfigs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(GridController.configList()) : [];
+    
+    // Function to update advanced mode
+    const updateAdvancedMode = (newValue) => {
         if (reactiveVars[selectedDeviceIndex]) {
-            reactiveVars[selectedDeviceIndex].deviceSettingAdvanced = currentDeviceAdvancedMode;
-            settings.devices[selectedDeviceIndex].deviceSettingAdvanced = currentDeviceAdvancedMode;
+            reactiveVars[selectedDeviceIndex].deviceSettingAdvanced = newValue;
+            settings.devices[selectedDeviceIndex].deviceSettingAdvanced = newValue;
+            reactiveVars = [...reactiveVars]; // Force reactivity
         }
-    }
+    };
+    
+    // Function to get merged device list (available + saved)
+    const getMergedDeviceList = (deviceType = 'devices') => {
+        let availableDevices = {};
+        
+        // Get currently available devices
+        switch(deviceType) {
+            case 'inputs':
+                availableDevices = GridController.availableDeviceInputs();
+                break;
+            case 'outputs':
+                availableDevices = GridController.availableDeviceOutputs();
+                break;
+            default:
+                availableDevices = GridController.availableDevices();
+        }
+        
+        console.log(`=== getMergedDeviceList(${deviceType}) DEBUG ===`);
+        console.log('Raw WebMidi inputs:', browser ? Array.from(WebMidi?.inputs || []).map(i => i.name) : 'N/A');
+        console.log('Raw WebMidi outputs:', browser ? Array.from(WebMidi?.outputs || []).map(o => o.name) : 'N/A');
+        console.log('Available devices:', availableDevices);
+        console.log('All device settings:', settings.devices);
+        
+        const mergedDevices = { ...availableDevices };
+        
+        // Add saved device configurations that aren't currently available
+        settings.devices.forEach((device, index) => {
+            let savedDeviceName;
+            switch(deviceType) {
+                case 'inputs':
+                    savedDeviceName = device.deviceInput;
+                    break;
+                case 'outputs':
+                    savedDeviceName = device.deviceOutput;
+                    break;
+                default:
+                    savedDeviceName = device.deviceInput || device.deviceOutput;
+            }
+            
+            console.log(`Device ${index + 1} saved name:`, savedDeviceName);
+            
+            if (savedDeviceName && !availableDevices[savedDeviceName]) {
+                // Add saved device with parentheses to indicate it's not currently available
+                mergedDevices[`(${savedDeviceName})`] = null; // null indicates it's saved but not available
+                console.log(`Added saved device: (${savedDeviceName})`);
+            }
+        });
+        
+        console.log('Final merged devices:', Object.keys(mergedDevices));
+        console.log('=== END DEBUG ===');
+        return mergedDevices;
+    };
     
     // Function to sync reactive vars with saved settings
     const syncReactiveVarsWithSettings = (deviceIndex) => {
@@ -168,11 +229,21 @@
         console.log('Syncing device', deviceIndex, 'with settings:', deviceSettings);
         
         // Always start with saved settings first
-        reactiveVars[deviceIndex].activeDevice = deviceSettings?.deviceInput || deviceSettings?.deviceOutput;
-        reactiveVars[deviceIndex].activeInput = deviceSettings?.deviceInput;
-        reactiveVars[deviceIndex].activeOutput = deviceSettings?.deviceOutput;
-        reactiveVars[deviceIndex].activeConfig = deviceSettings?.deviceConfig;
+        const savedDeviceName = deviceSettings?.deviceInput || deviceSettings?.deviceOutput;
+        const isDeviceAvailable = savedDeviceName && GridController.availableDevices()[savedDeviceName];
+        
+        // Show device name with parentheses if saved but not currently available, or undefined if no device
+        reactiveVars[deviceIndex].activeDevice = savedDeviceName ? 
+            (isDeviceAvailable ? savedDeviceName : `(${savedDeviceName})`) : undefined;
+        reactiveVars[deviceIndex].activeInput = deviceSettings?.deviceInput ? 
+            (GridController.availableDeviceInputs()[deviceSettings.deviceInput] ? deviceSettings.deviceInput : `(${deviceSettings.deviceInput})`) : undefined;
+        reactiveVars[deviceIndex].activeOutput = deviceSettings?.deviceOutput ? 
+            (GridController.availableDeviceOutputs()[deviceSettings.deviceOutput] ? deviceSettings.deviceOutput : `(${deviceSettings.deviceOutput})`) : undefined;
+        reactiveVars[deviceIndex].activeConfig = deviceSettings?.deviceConfig || undefined;
         reactiveVars[deviceIndex].deviceSettingAdvanced = deviceSettings?.deviceSettingAdvanced || false;
+        reactiveVars[deviceIndex].enabled = deviceSettings?.enabled !== undefined ? deviceSettings.enabled : true;
+        
+        console.log('Synced reactive vars - activeDevice:', reactiveVars[deviceIndex].activeDevice);
         
         console.log('Set reactive vars to saved settings:', reactiveVars[deviceIndex]);
         
@@ -208,16 +279,24 @@
     }
 
     const deviceKeyPressed: KeyPress = (deviceID: number, keyID: KeyID) => {
+        // Only process input if device is enabled
+        if (!settings.devices[deviceID]?.enabled) {
+            console.info(`Device ${deviceID} input ignored - device disabled`);
+            return;
+        }
+        
         console.info(`Device ${deviceID} Button ${keyID} has been pressed`);
-        // device.setColor(keyID, new Color(ColorType.RGB, [255, 255, 255]));
-        // console.log(deviceInfo)
         engine?.KeyPress(midiDeviceInfos[deviceID], keyID);
     };
 
     const deviceKeyReleased: KeyRelease = (deviceID: number, keyID: KeyID) => {
+        // Only process input if device is enabled
+        if (!settings.devices[deviceID]?.enabled) {
+            console.info(`Device ${deviceID} input ignored - device disabled`);
+            return;
+        }
+        
         console.info(`Device ${deviceID} Button ${keyID} has been released`);
-        // // device.setColor(keyID, new Color(ColorType.RGB, [0, 0, 0]));
-
         engine?.KeyRelease(midiDeviceInfos[deviceID], keyID);
     };
 
@@ -282,6 +361,9 @@
                 break;
 
             case "connected":
+                // Update device lists
+                deviceListUpdateTrigger++;
+                
                 // Check if this device matches any of our configured devices
                 let deviceFound = false;
                 for (let i = 0; i < 4; i++) {
@@ -306,6 +388,9 @@
                 break;
 
             case "disconnected":
+                // Update device lists
+                deviceListUpdateTrigger++;
+                
                 toast.push(
                     $t("toast.disconnected", {device_name: event.device})
                 );
@@ -579,8 +664,29 @@
             var signature = [deviceID, keyID];
             if(!overlays.map(String).includes(signature.toString()))
             {
-                virtualDevices[deviceID].setColor(keyID, color);
-                midiDevices[deviceID]?.setColor(keyID, color);
+                // Send to virtual device for the specific deviceID
+                virtualDevices[deviceID]?.setColor(keyID, color);
+                
+                // HYBRID APPROACH: Send to target device + broadcast to all other enabled devices
+                
+                // 1. Send to the specific device the engine requested (original behavior)
+                if (settings.devices[deviceID]?.enabled !== false && midiDevices[deviceID]?.outputReady()) {
+                    console.log('Sending to target device', deviceID);
+                    midiDevices[deviceID].setColor(keyID, color);
+                }
+                
+                // 2. Also broadcast to all OTHER enabled devices (multi-device feature)
+                for (let i = 0; i < 4; i++) {
+                    if (i !== deviceID) { // Skip the target device (already handled above)
+                        const isEnabled = settings.devices[i]?.enabled !== false;
+                        const isReady = midiDevices[i]?.outputReady();
+                        
+                        if (isEnabled && isReady) {
+                            console.log('Broadcasting to additional device', i);
+                            midiDevices[i].setColor(keyID, color);
+                        }
+                    }
+                }
             }
         },
 
@@ -602,8 +708,20 @@
                 if(index != -1) {overlays.splice(index, 1);}
             }
 
-            virtualDevices[deviceID].setColor(keyID, color);
-            midiDevices[deviceID]?.setColor(keyID, color);
+            // Send to virtual device for the specific deviceID
+            virtualDevices[deviceID]?.setColor(keyID, color);
+            
+            // HYBRID: Target device + broadcast to others
+            // 1. Send to target device
+            if (settings.devices[deviceID]?.enabled !== false && midiDevices[deviceID]?.outputReady()) {
+                midiDevices[deviceID].setColor(keyID, color);
+            }
+            // 2. Broadcast to other enabled devices
+            for (let i = 0; i < 4; i++) {
+                if (i !== deviceID && settings.devices[i]?.enabled !== false && midiDevices[i]?.outputReady()) {
+                    midiDevices[i].setColor(keyID, color);
+                }
+            }
         },
 
         unsetOverlay(deviceID: number, keyID: KeyID)
@@ -611,8 +729,22 @@
             var signature = [deviceID, keyID];
             let index = overlays.map(String).indexOf(signature.toString());
             if(index != -1) {overlays.splice(index, 1);}
-            virtualDevices[deviceID].setColor(keyID, new Color(ColorType.Palette, ["classic", 0]));
-            midiDevices[deviceID]?.setColor(keyID, new Color(ColorType.Palette, ["classic", 0]));
+            
+            // Send to virtual device for the specific deviceID
+            virtualDevices[deviceID]?.setColor(keyID, new Color(ColorType.Palette, ["classic", 0]));
+            
+            // HYBRID: Target device + broadcast to others
+            const clearColor = new Color(ColorType.Palette, ["classic", 0]);
+            // 1. Send to target device
+            if (settings.devices[deviceID]?.enabled !== false && midiDevices[deviceID]?.outputReady()) {
+                midiDevices[deviceID].setColor(keyID, clearColor);
+            }
+            // 2. Broadcast to other enabled devices
+            for (let i = 0; i < 4; i++) {
+                if (i !== deviceID && settings.devices[i]?.enabled !== false && midiDevices[i]?.outputReady()) {
+                    midiDevices[i].setColor(keyID, clearColor);
+                }
+            }
         },
 
         clearOverlay: function(targetDeviceID?: number){
@@ -621,8 +753,21 @@
                 let [deviceID, keyID] = overlay;
                 if(targetDeviceID === undefined || deviceID == targetDeviceID)
                 {
-                    virtualDevices[deviceID].setColor(keyID, new Color(ColorType.Palette, ["classic", 0]));
-                    midiDevices[deviceID]?.setColor(keyID, new Color(ColorType.Palette, ["classic", 0]));
+                    // Send to virtual device for the specific deviceID
+                    virtualDevices[deviceID]?.setColor(keyID, new Color(ColorType.Palette, ["classic", 0]));
+                    
+                    // HYBRID: Target device + broadcast to others
+                    const clearColor = new Color(ColorType.Palette, ["classic", 0]);
+                    // 1. Send to target device
+                    if (settings.devices[deviceID]?.enabled !== false && midiDevices[deviceID]?.outputReady()) {
+                        midiDevices[deviceID].setColor(keyID, clearColor);
+                    }
+                    // 2. Broadcast to other enabled devices
+                    for (let i = 0; i < 4; i++) {
+                        if (i !== deviceID && settings.devices[i]?.enabled !== false && midiDevices[i]?.outputReady()) {
+                            midiDevices[i].setColor(keyID, clearColor);
+                        }
+                    }
                 }
             }
             overlays = [];
@@ -634,17 +779,28 @@
         },
 
         getDevices: function () {
-            return virtualDevicesInfo;
+            // Return all device info (virtual + all enabled and connected MIDI devices)
+            const allDevices = [...virtualDevicesInfo];
+            
+            // Add all enabled and connected MIDI devices
+            for (let i = 0; i < 4; i++) {
+                if (settings.devices[i]?.enabled && midiDeviceInfos[i]) {
+                    allDevices.push(midiDeviceInfos[i]);
+                }
+            }
+            
+            console.log('Engine getDevices() returning:', allDevices.length, 'devices (', allDevices.filter(d => d.id >= 0).length, 'MIDI enabled)');
+            return allDevices;
         },
 
         options: options
     };
 
     let reactiveVars = [
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false },
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false },
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false },
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false }
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true }
     ];
 
     let webMidiAvailable = false;
@@ -671,6 +827,7 @@
                 settings.devices[0].deviceOutput = savedSettings.deviceOutput;
                 settings.devices[0].deviceConfig = savedSettings.deviceConfig;
                 settings.devices[0].deviceSettingAdvanced = savedSettings.deviceSettingAdvanced || false;
+                settings.devices[0].enabled = true; // Enable by default for migrated devices
                 delete savedSettings.deviceInput;
                 delete savedSettings.deviceOutput;
                 delete savedSettings.deviceConfig;
@@ -992,6 +1149,38 @@
 
                         <!-- Device settings for selected device -->
                         <div class="device-settings">
+                            <!-- Device enable toggle -->
+                            <div class="setting {mobileView? 'mobile' : ''}">
+                                <div class="setting-name">
+                                    <span>{$t("device.enable_device")} {selectedDeviceIndex + 1}</span>
+                                </div>
+
+                                <div class="setting-option">
+                                    <Switch 
+                                        checked={reactiveVars[selectedDeviceIndex]?.enabled || false}
+                                        on:change={(e) => {
+                                            settings.devices[selectedDeviceIndex].enabled = e.detail.checked;
+                                            reactiveVars[selectedDeviceIndex].enabled = e.detail.checked;
+                                            reactiveVars = [...reactiveVars]; // Force reactivity
+                                            
+                                            if (!e.detail.checked) {
+                                                // Disconnect when disabled
+                                                midiDevices[selectedDeviceIndex]?.disconnect();
+                                            } else {
+                                                // Reconnect when enabled
+                                                const device = settings.devices[selectedDeviceIndex];
+                                                if (device.deviceInput && GridController.availableDevices()[device.deviceInput]) {
+                                                    midiDevices[selectedDeviceIndex].connectDevice(
+                                                        GridController.availableDevices()[device.deviceInput]
+                                                    );
+                                                }
+                                            }
+                                            
+                                            console.log('Device', selectedDeviceIndex + 1, 'enabled:', e.detail.checked);
+                                        }}
+                                    />
+                                </div>
+                            </div>
                                     {#if !currentDeviceAdvancedMode}
                                         <div class="setting {mobileView? 'mobile' : ''}">
                                             <div class="setting-name">
@@ -1001,24 +1190,39 @@
                                             <div class="setting-option">
                                                 <Dropdown
                                                         value={reactiveVars[selectedDeviceIndex]?.activeDevice}
-                                                        options={Object.keys(
-                                                        GridController.availableDevices()
-                                                    )}
+                                                        options={Object.keys(getMergedDeviceList())}
                                                         placeholder={$t("device.no_device")}
                                                         on:change={(e) => {
                                                         console.log('Device dropdown changed:', e.detail.value, 'for device index:', selectedDeviceIndex);
-                                                        settings.devices[selectedDeviceIndex].deviceInput = e.detail.value;
-                                                        settings.devices[selectedDeviceIndex].deviceOutput = e.detail.value;
+                                                        
+                                                        // Handle saved devices (in parentheses) and empty selection
+                                                        let deviceName = e.detail.value;
+                                                        if (deviceName === '' || deviceName === null || deviceName === undefined) {
+                                                            // No device selected - clear everything
+                                                            deviceName = undefined;
+                                                            console.log('No device selected - clearing configuration');
+                                                        } else if (deviceName && deviceName.startsWith('(') && deviceName.endsWith(')')) {
+                                                            // Remove parentheses from saved device name
+                                                            deviceName = deviceName.slice(1, -1);
+                                                            console.log('Selected saved device (not currently available):', deviceName);
+                                                        }
+                                                        
+                                                        settings.devices[selectedDeviceIndex].deviceInput = deviceName;
+                                                        settings.devices[selectedDeviceIndex].deviceOutput = deviceName;
                                                         console.log('Updated settings.devices[' + selectedDeviceIndex + ']:', settings.devices[selectedDeviceIndex]);
-                                                        if (e.detail.value) {
+                                                        
+                                                        if (deviceName && GridController.availableDevices()[deviceName]) {
+                                                            // Device is currently available - connect it
                                                             midiDeviceInfos[selectedDeviceIndex] = undefined;
                                                             midiDevices[selectedDeviceIndex].connectDevice(
-                                                                GridController.availableDevices()[
-                                                                    e.detail.value
-                                                                ]
+                                                                GridController.availableDevices()[deviceName]
                                                             );
                                                         } else {
+                                                            // No device selected or device not available - disconnect
                                                             midiDevices[selectedDeviceIndex].disconnect();
+                                                            if (deviceName) {
+                                                                console.log('Device saved but not currently available:', deviceName);
+                                                            }
                                                         }
                                                         // Sync UI with updated settings
                                                         syncReactiveVarsWithSettings(selectedDeviceIndex);
@@ -1035,20 +1239,26 @@
                                             <div class="setting-option">
                                                 <Dropdown
                                                         value={reactiveVars[selectedDeviceIndex]?.activeInput}
-                                                        options={Object.keys(
-                                                        GridController.availableDeviceInputs()
-                                                    )}
+                                                        options={Object.keys(getMergedDeviceList('inputs'))}
                                                         placeholder={$t("device.no_device")}
                                                         on:change={(e) => {
-                                                        settings.devices[selectedDeviceIndex].deviceInput = e.detail.value;
+                                                        let deviceName = e.detail.value;
+                                                        if (deviceName === '' || deviceName === null || deviceName === undefined) {
+                                                            deviceName = undefined;
+                                                        } else if (deviceName && deviceName.startsWith('(') && deviceName.endsWith(')')) {
+                                                            deviceName = deviceName.slice(1, -1);
+                                                        }
+                                                        
+                                                        settings.devices[selectedDeviceIndex].deviceInput = deviceName;
                                                         midiDeviceInfos[selectedDeviceIndex] = undefined;
-                                                        midiDevices[selectedDeviceIndex].connect(
-                                                            GridController.availableDeviceInputs()[
-                                                                e.detail.value
-                                                            ],
-                                                            midiDevices[selectedDeviceIndex].activeOutput,
-                                                            midiDevices[selectedDeviceIndex].activeConfig
-                                                        );
+                                                        
+                                                        if (deviceName && GridController.availableDeviceInputs()[deviceName]) {
+                                                            midiDevices[selectedDeviceIndex].connect(
+                                                                GridController.availableDeviceInputs()[deviceName],
+                                                                midiDevices[selectedDeviceIndex].activeOutput,
+                                                                midiDevices[selectedDeviceIndex].activeConfig
+                                                            );
+                                                        }
                                                         syncReactiveVarsWithSettings(selectedDeviceIndex);
                                                     }}
                                                 />
@@ -1063,20 +1273,26 @@
                                             <div class="setting-option">
                                                 <Dropdown
                                                         value={reactiveVars[selectedDeviceIndex]?.activeOutput}
-                                                        options={Object.keys(
-                                                        GridController.availableDeviceOutputs()
-                                                    )}
+                                                        options={Object.keys(getMergedDeviceList('outputs'))}
                                                         placeholder={$t("device.no_device")}
                                                         on:change={(e) => {
-                                                        settings.devices[selectedDeviceIndex].deviceOutput = e.detail.value;
+                                                        let deviceName = e.detail.value;
+                                                        if (deviceName === '' || deviceName === null || deviceName === undefined) {
+                                                            deviceName = undefined;
+                                                        } else if (deviceName && deviceName.startsWith('(') && deviceName.endsWith(')')) {
+                                                            deviceName = deviceName.slice(1, -1);
+                                                        }
+                                                        
+                                                        settings.devices[selectedDeviceIndex].deviceOutput = deviceName;
                                                         midiDeviceInfos[selectedDeviceIndex] = undefined;
-                                                        midiDevices[selectedDeviceIndex].connect(
-                                                            midiDevices[selectedDeviceIndex].activeInput,
-                                                            GridController.availableDeviceOutputs()[
-                                                                e.detail.value
-                                                            ],
-                                                            midiDevices[selectedDeviceIndex].activeConfig
-                                                        );
+                                                        
+                                                        if (deviceName && GridController.availableDeviceOutputs()[deviceName]) {
+                                                            midiDevices[selectedDeviceIndex].connect(
+                                                                midiDevices[selectedDeviceIndex].activeInput,
+                                                                GridController.availableDeviceOutputs()[deviceName],
+                                                                midiDevices[selectedDeviceIndex].activeConfig
+                                                            );
+                                                        }
                                                         syncReactiveVarsWithSettings(selectedDeviceIndex);
                                                     }}
                                                 />
@@ -1092,7 +1308,7 @@
                                         <div class="setting-option">
                                             <Dropdown
                                                     value={reactiveVars[selectedDeviceIndex]?.activeConfig}
-                                                    options={Object.keys(GridController.configList())}
+                                                    options={availableConfigs}
                                                     placeholder={$t("device.no_config")}
                                                     on:change={(e) => {
                                                     settings.devices[selectedDeviceIndex].deviceConfig = e.detail.value;
@@ -1119,11 +1335,9 @@
 
                                         <div class="setting-option">
                                             <Switch 
-                                            bind:checked={currentDeviceAdvancedMode}
+                                            checked={currentDeviceAdvancedMode}
                                             on:change={(e) => {
-                                                settings.devices[selectedDeviceIndex].deviceSettingAdvanced = e.detail.checked;
-                                                reactiveVars[selectedDeviceIndex].deviceSettingAdvanced = e.detail.checked;
-                                                reactiveVars = [...reactiveVars]; // Force reactivity
+                                                updateAdvancedMode(e.detail.checked);
                                                 console.log('Advanced mode changed for device', selectedDeviceIndex, ':', e.detail.checked);
                                             }}
                                         />
