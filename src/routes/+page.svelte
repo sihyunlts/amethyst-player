@@ -152,9 +152,9 @@
     $: currentDeviceAdvancedMode = reactiveVars[selectedDeviceIndex]?.deviceSettingAdvanced || false;
     
     // Reactive device lists that update when devices connect/disconnect
-    $: availableDevices = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getMergedDeviceList()) : [];
-    $: availableInputs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getMergedDeviceList('inputs')) : [];
-    $: availableOutputs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getMergedDeviceList('outputs')) : [];
+    $: availableDevices = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getAvailableDeviceOptions()) : [];
+    $: availableInputs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getAvailableDeviceOptions('inputs')) : [];
+    $: availableOutputs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getAvailableDeviceOptions('outputs')) : [];
     $: availableConfigs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(GridController.configList()) : [];
     
     // Function to update advanced mode
@@ -166,8 +166,8 @@
         }
     };
     
-    // Function to get merged device list (available + saved)
-    const getMergedDeviceList = (deviceType = 'devices') => {
+    // Function to get available devices for dropdown options (no disconnected devices)
+    const getAvailableDeviceOptions = (deviceType = 'devices') => {
         let availableDevices = {};
         
         // Get currently available devices
@@ -182,11 +182,24 @@
                 availableDevices = GridController.availableDevices();
         }
         
-        console.log(`=== getMergedDeviceList(${deviceType}) DEBUG ===`);
-        console.log('Raw WebMidi inputs:', browser ? Array.from(WebMidi?.inputs || []).map(i => i.name) : 'N/A');
-        console.log('Raw WebMidi outputs:', browser ? Array.from(WebMidi?.outputs || []).map(o => o.name) : 'N/A');
-        console.log('Available devices:', availableDevices);
-        console.log('All device settings:', settings.devices);
+        return availableDevices;
+    };
+    
+    // Function to get merged device list (available + saved) - used for display values
+    const getMergedDeviceList = (deviceType = 'devices') => {
+        let availableDevices = {};
+        
+        // Get currently available devices
+        switch(deviceType) {
+            case 'inputs':
+                availableDevices = GridController.availableDeviceInputs();
+                break;
+            case 'outputs':
+                availableDevices = GridController.availableDeviceOutputs();
+                break;
+            default:
+                availableDevices = GridController.availableDevices();
+        }
         
         const mergedDevices = { ...availableDevices };
         
@@ -204,17 +217,12 @@
                     savedDeviceName = device.deviceInput || device.deviceOutput;
             }
             
-            console.log(`Device ${index + 1} saved name:`, savedDeviceName);
-            
             if (savedDeviceName && !availableDevices[savedDeviceName]) {
                 // Add saved device with parentheses to indicate it's not currently available
                 mergedDevices[`(${savedDeviceName})`] = null; // null indicates it's saved but not available
-                console.log(`Added saved device: (${savedDeviceName})`);
             }
         });
         
-        console.log('Final merged devices:', Object.keys(mergedDevices));
-        console.log('=== END DEBUG ===');
         return mergedDevices;
     };
     
@@ -322,7 +330,7 @@
                         midiDevices[event.deviceID]?.activeConfig?.name;
                 }
                 toast.push(
-                    $t("toast.is_now_the_active_device", {
+                    $t("toast.is_now_connected", {
                         device_name: midiDeviceInfos[event.deviceID].name,
                     }),
                     {
@@ -338,8 +346,8 @@
                 if (midiDeviceInfos[event.deviceID] != undefined) {
                     //So when user action caused port close (it will set deviceInfo to undefined). No toast will be shown
                     toast.push(
-                        $t("toast.no_longer_active", {
-                            device_name: midiDeviceInfos[event.deviceID].name,
+                        $t("toast.is_now_disconnected", {
+                            name: midiDeviceInfos[event.deviceID].name,
                         }),
                         {
                             theme: {
@@ -365,35 +373,31 @@
                 deviceListUpdateTrigger++;
                 
                 // Check if this device matches any of our configured devices
-                let deviceFound = false;
                 for (let i = 0; i < 4; i++) {
                     if (event.device == settings.devices[i].deviceInput) {
-                        toast.push(
-                            $t("toast.connected", {device_name: event.device})
-                        );
                         midiDevices[i].connect(
                             GridController.availableDeviceInputs()[event.device],
                             GridController.availableDeviceOutputs()[event.device],
                             settings.devices[i].deviceConfig
                         );
-                        deviceFound = true;
                         break;
                     }
-                }
-                if (!deviceFound) {
-                    toast.push(
-                        $t("toast.detected", {device_name: event.device})
-                    );
                 }
                 break;
 
             case "disconnected":
-                // Update device lists
-                deviceListUpdateTrigger++;
-                
-                toast.push(
-                    $t("toast.disconnected", {device_name: event.device})
-                );
+                // Update device lists with a small delay to allow WebMIDI to update
+                setTimeout(() => {
+                    deviceListUpdateTrigger++;
+                    
+                    // Force update of the current device's reactive vars to reflect disconnection
+                    if (browser) {
+                        // Update all device reactive vars to show disconnected status
+                        for (let i = 0; i < 4; i++) {
+                            syncReactiveVarsWithSettings(i);
+                        }
+                    }
+                }, 100); // 100ms delay
                 break;
         }
     };
@@ -1190,7 +1194,7 @@
                                             <div class="setting-option">
                                                 <Dropdown
                                                         value={reactiveVars[selectedDeviceIndex]?.activeDevice}
-                                                        options={Object.keys(getMergedDeviceList())}
+                                                        options={availableDevices}
                                                         placeholder={$t("device.no_device")}
                                                         on:change={(e) => {
                                                         console.log('Device dropdown changed:', e.detail.value, 'for device index:', selectedDeviceIndex);
@@ -1239,7 +1243,7 @@
                                             <div class="setting-option">
                                                 <Dropdown
                                                         value={reactiveVars[selectedDeviceIndex]?.activeInput}
-                                                        options={Object.keys(getMergedDeviceList('inputs'))}
+                                                        options={availableInputs}
                                                         placeholder={$t("device.no_device")}
                                                         on:change={(e) => {
                                                         let deviceName = e.detail.value;
@@ -1273,7 +1277,7 @@
                                             <div class="setting-option">
                                                 <Dropdown
                                                         value={reactiveVars[selectedDeviceIndex]?.activeOutput}
-                                                        options={Object.keys(getMergedDeviceList('outputs'))}
+                                                        options={availableOutputs}
                                                         placeholder={$t("device.no_device")}
                                                         on:change={(e) => {
                                                         let deviceName = e.detail.value;
