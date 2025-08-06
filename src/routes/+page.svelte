@@ -1128,6 +1128,7 @@
                             <Multibutton 
                                 options={["1", "2", "3", "4"]}
                                 bind:value={selectedDeviceTab}
+                                class="device-selector"
                             />
                         </div>
                         <button class="close-button" on:click={() => popup["devices"] = false}>
@@ -1619,9 +1620,34 @@
             align-items: center;
         }
         
+        .close-button {
+            background-color: inherit;
+            border: 2px solid var(--bg4);
+            color: var(--text2);
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+
+            &:hover {
+                background-color: var(--bg3);
+                border-color: var(--bg4);
+                color: var(--text1);
+            }
+        }
+        
         .device-selector-header {
             display: flex;
             align-items: center;
+        }
+        
+        :global(.device-selector button) {
+            padding: 0 20px !important;
+            height: 36px !important;
         }
     }
 
