@@ -1,0 +1,15 @@
+{
+    "device": "디바이스",
+    "midi_device": "MIDI 디바이스",
+    "midi_input_device": "MIDI 입력 디바이스",
+    "midi_output_device": "MIDI 출력 디바이스",
+    "midi_device_config": "MIDI 디바이스 설정",
+    "advanced_mode": "고급 모드",
+    "no_config": "설정 안 함",
+    "no_device": "장치 없음",
+    "device_selector": "디바이스 선택",
+    "settings": "설정",
+    "enable_device": "디바이스 {{device_index}} 활성화",
+    "webmidi_unavailable_title": "WebMIDI를 사용할 수 없습니다",
+    "webmidi_unavailable_description": "WebMIDI가 브라우저에서 비활성화되었거나 사용할 수 없습니다.\nChrome, Edge, Opera와 같은 호환 브라우저를 사용하여 MIDI 디바이스를 연결하세요.\n\n브라우저가 WebMIDI를 지원하는 경우, MIDI 디바이스에 대한 제어 권한을 허용했는지 확인하세요."
+}

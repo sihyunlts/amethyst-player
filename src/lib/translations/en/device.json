@@ -9,7 +9,7 @@
     "no_device": "No Device",
     "device_selector": "Device Selection",
     "settings": "Settings",
-    "enable_device": "Enable Device",
+    "enable_device": "Enable Device {{device_index}}",
     "webmidi_unavailable_title": "WebMIDI Not Available",
     "webmidi_unavailable_description": "WebMIDI is not available in your browser.\nPlease use a compatible browser like Chrome, Edge, or Opera to connect MIDI devices.\n\nIf your browser supports WebMIDI, make sure you have approved access to your MIDI devices."
 }

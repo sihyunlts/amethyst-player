@@ -1157,7 +1157,7 @@
                             <!-- Device enable toggle -->
                             <div class="setting {mobileView? 'mobile' : ''}">
                                 <div class="setting-name">
-                                    <span>{$t("device.enable_device")} {selectedDeviceIndex + 1}</span>
+                                    <span>{$t("device.enable_device", { device_index: selectedDeviceIndex + 1 })}</span>
                                 </div>
 
                                 <div class="setting-option">

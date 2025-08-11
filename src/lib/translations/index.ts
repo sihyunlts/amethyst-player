@@ -6,6 +6,7 @@ export const config = {
     translations: {
         "en": { lang },
         "zh-CN": { lang },
+        "ko-KR": { lang },
     },
     loaders: [
         //EN
@@ -79,6 +80,42 @@ export const config = {
             locale: 'zh-CN',
             key: 'tutorial',
             loader: async () => (await import('./zh-cn/tutorial.json')).default,
+        },
+        //KO-KR
+        {
+            locale: 'ko-KR',
+            key: 'sidebar',
+            loader: async () => (await import('./ko-kr/sidebar.json')).default,
+        },
+        {
+            locale: 'ko-KR',
+            key: 'setting',
+            loader: async () => (await import('./ko-kr/setting.json')).default,
+        },
+        {
+            locale: 'ko-KR',
+            key: 'device',
+            loader: async () => (await import('./ko-kr/device.json')).default,
+        },
+        {
+            locale: 'ko-KR',
+            key: 'demoplay',
+            loader: async () => (await import('./ko-kr/demoplay.json')).default,
+        },
+        {
+            locale: 'ko-KR',
+            key: 'toast',
+            loader: async () => (await import('./ko-kr/toast.json')).default,
+        },
+        {
+            locale: 'ko-KR',
+            key: 'color',
+            loader: async () => (await import('./ko-kr/color.json')).default,
+        },
+        {
+            locale: 'ko-KR',
+            key: 'tutorial',
+            loader: async () => (await import('./ko-kr/tutorial.json')).default,
         },
     ],
 };

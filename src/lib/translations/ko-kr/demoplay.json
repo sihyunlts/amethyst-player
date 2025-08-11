@@ -1,0 +1,8 @@
+{
+    "demoplay": "자동 재생",
+    "light_animation": "라이트 애니메이션",
+    "show_key_press": "입력된 키 표시",
+    "key_press_color": "입력된 키 색상",
+    "learning_mode": "학습 모드",
+    "learning_mode_info": "이 모드는 자동 재생에 맞춰 연습할 수 있도록 LED를 표시합니다. 멀티 샘플링된 버튼을 잘못 눌러도 소리는 변경되지 않으며, 올바른 키를 누르면 자동으로 다음 버튼으로 넘어갑니다."
+}

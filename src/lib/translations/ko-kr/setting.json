@@ -1,0 +1,11 @@
+{
+    "settings": "설정",
+    "virtual_device": "가상 디바이스",
+    "virtual_device_Scale": "가상 디바이스 크기",
+    "project_engine": "프로젝트 엔진",
+    "language": "언어",
+    "theme": "테마",
+    "theme_dark": "다크",
+    "theme_light": "라이트",
+    "theme_auto": "자동 (시스템)"
+}

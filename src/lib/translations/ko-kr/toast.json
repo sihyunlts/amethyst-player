@@ -1,0 +1,10 @@
+{
+    "webmidi_available": "WebMIDI가 브라우저에서 활성화되었습니다",
+    "webmidi_unavailable": "WebMIDI가 브라우저에서 비활성화되었거나 사용할 수 없습니다",
+    "connected": "{{device_name}} 연결됨",
+    "disconnected": "{{device_name}} 연결 해제됨",
+    "detected": "{{device_name}} 감지됨",
+    "is_now_connected": "{{device_name}} 연결됨",
+    "is_now_disconnected":"{{name}} 연결 해제됨",
+    "project_failed_to_load":"프로젝트 불러오기 실패: {{project_loading_error}}" 
+}
