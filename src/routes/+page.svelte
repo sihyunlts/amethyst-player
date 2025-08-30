@@ -33,6 +33,7 @@
     import { themeMode, theme } from "$lib/stores/theme";
 
     import {browser} from "$app/environment";
+    import { page } from "$app/stores";
 
     import { GoogleAnalytics, ga } from '@beyonk/svelte-google-analytics'
 
@@ -588,6 +589,74 @@
         }
     };
 
+    const downloadAndLoadUnipack = async (url: string) => {
+        if (!url) return;
+        
+        projectStatus = "loading";
+        
+        try {
+            toast.push(
+                $t("toast.downloading_unipack"),
+                {
+                    theme: {
+                        "--toastColor": "#FFFFFF;",
+                        "--toastBackground": "#3182CE",
+                        "--toastBarBackground": "#2C5282",
+                    },
+                }
+            );
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
+            }
+            
+            const blob = await response.blob();
+            const fileName = url.split('/').pop()?.split('?')[0] || 'unipack.zip';
+            const file = new File([blob], fileName, { type: 'application/zip' });
+            
+            await loadProjectFile(file, true); // Save to cache
+            
+            toast.push(
+                $t("toast.unipack_download_success"),
+                {
+                    theme: {
+                        "--toastColor": "#FFFFFF;",
+                        "--toastBackground": "#48BB78",
+                        "--toastBarBackground": "#2F855A",
+                    },
+                }
+            );
+            
+            ga.addEvent('project_loaded_from_url', {
+                engine: settings.projectEngine,
+                url: url,
+                file_name: fileName,
+                project_name: engine.projectInfo?.name || 'Unknown'
+            });
+            
+        } catch (error) {
+            toast.push(
+                $t("toast.unipack_download_failed", { error: error.message }),
+                {
+                    theme: {
+                        "--toastColor": "#FFFFFF;",
+                        "--toastBackground": "#F56565",
+                        "--toastBarBackground": "#C53030",
+                    },
+                    duration: 8000
+                }
+            );
+            projectStatus = "not loaded";
+            
+            ga.addEvent('project_failed_to_load_from_url', {
+                engine: settings.projectEngine,
+                url: url,
+                error: error.toString()
+            });
+        }
+    };
+
     const handleProjectStoreSelection = (event: CustomEvent) => {
         const { file, projectInfo } = event.detail;
         popup["projectStore"] = false;
@@ -898,6 +967,17 @@
             settings.projectEngine = Object.keys(projectEngines)[0]; //Revert to the first one
         }
         engine = projectEngines[settings.projectEngine](api);
+        
+        // Check for unipack_url parameter and automatically download/load
+        if ($page.url.searchParams.has('unipack_url')) {
+            const unipackUrl = $page.url.searchParams.get('unipack_url');
+            if (unipackUrl) {
+                // Small delay to ensure everything is initialized
+                setTimeout(() => {
+                    downloadAndLoadUnipack(unipackUrl);
+                }, 1000);
+            }
+        }
     }
 
     onMount(() => {
