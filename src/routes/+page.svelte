@@ -1113,6 +1113,10 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="build-info">
+                        <span>{__BUILD_STRING__}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1753,6 +1757,22 @@
             font-family: inherit !important;
             font-size: inherit !important;
             font-weight: 500;
+        }
+    }
+
+    .build-info {
+        padding-top: 20px;
+        border-top: 1px solid var(--bg3);
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        span {
+            font-family: "Roboto", sans-serif;
+            font-size: 14px;
+            color: var(--text2);
+            font-weight: 300;
         }
     }
 
