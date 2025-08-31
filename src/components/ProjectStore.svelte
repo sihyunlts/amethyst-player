@@ -84,23 +84,23 @@
             filteredProjects = projects;
             
             // Debug: Print project metadata
-            console.log('=== PROJECT METADATA DEBUG ===');
-            projects.forEach((project, index) => {
-                console.log(`Project ${index + 1}:`);
-                console.log({
-                    id: project.id,
-                    name: project.name,
-                    author: project.author,
-                    description: project.description,
-                    download_count: project.download_count,
-                    play_count: project.play_count,
-                    created_at: project.created_at,
-                    file_url: project.file_url,
-                    video_url: project.video_url
-                });
-                console.log('---');
-            });
-            console.log('=== END DEBUG ===');
+            // console.log('=== PROJECT METADATA DEBUG ===');
+            // projects.forEach((project, index) => {
+            //     console.log(`Project ${index + 1}:`);
+            //     console.log({
+            //         id: project.id,
+            //         name: project.name,
+            //         author: project.author,
+            //         description: project.description,
+            //         download_count: project.download_count,
+            //         play_count: project.play_count,
+            //         created_at: project.created_at,
+            //         file_url: project.file_url,
+            //         video_url: project.video_url
+            //     });
+            //     console.log('---');
+            // });
+            // console.log('=== END DEBUG ===');
             
             sortProjects();
         } catch (err) {
