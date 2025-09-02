@@ -112,7 +112,7 @@
     .lp-border {
         background: var(--device-body);
         border: 2px solid var(--device-border);
-        border-radius: 2%;
+        border-radius: 1%;
         box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
 
         position: relative;
@@ -126,14 +126,14 @@
         width: 100%;
 
         display: flex;
-        gap: 6px;
+        gap: 2px;
         flex-direction: column;
-        padding: 4%;
+        padding: 4.5%;
 
         .lp-controls-row {
             height: 100%;
             display: flex;
-            gap: 6px;
+            gap: 2px;
         }
 
         .lp-btn-parent {
@@ -147,7 +147,7 @@
             :global(.lp-side-btn) {
                 height: 90%;
                 width: 90%;
-                border-radius: 8%;
+                border-radius: 2%;
                 background-color: var(--device-button);
 
                 &::after {
@@ -158,17 +158,17 @@
                     height: 100%;
                     width: 100%;
                     
-                    padding: 2px;
+                    padding: 5%;
                     background-clip: content-box;
                     background-color: var(--device-button-overlay);
-                    border-radius: 8%;
+                    border-radius: 2%;
                 }
             }
 
             :global(.lp-logo) {
                 height: 90%;
                 width: 90%;
-                border-radius: 8%;
+                border-radius: 2%;
                 background-color: var(--device-border);
 
                 display: flex;
@@ -176,17 +176,17 @@
                 align-items: center;
 
                 :global(.logo-inner) {
-                    width: 85%;
-                    height: 85%;
+                    width: 75%;
+                    height: 75%;
 
                     background-color: var(--device-button);
-                    border-radius: 5%;
+                    border-radius: 8%;
                     overflow: hidden;
 
                     :global(.logo-holder) {
                         height: 100%;
                         width: 100%;
-                        transform: rotateZ(-45deg) scale(0.9);
+                        transform: rotateZ(-45deg) scale(0.88);
 
                         :global(.logo-split) {
                             height: 50%;
@@ -221,7 +221,7 @@
             :global(.lp-normal-btn) {
                 height: 90%;
                 width: 90%;
-                border-radius: 8%;
+                border-radius: 2%;
                 background-color: var(--device-button);
             }
 
