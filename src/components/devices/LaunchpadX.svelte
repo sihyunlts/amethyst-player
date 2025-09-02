@@ -166,9 +166,6 @@
             }
 
             :global(.lp-logo) {
-                padding: 0;
-                border: none;
-
                 height: 90%;
                 width: 90%;
                 border-radius: 8%;
@@ -200,7 +197,7 @@
                             align-items: center;
 
                             :global(.top-part) {
-                                background-color: var(--device-part);
+                                background-color: var(--device-body);
                                 margin-top: 10%;
 
                                 height: 60%;
@@ -208,7 +205,7 @@
                             }
 
                             :global(.bottom-part) {
-                                background-color: var(--device-part);
+                                background-color: var(--device-body);
                                 margin-bottom: 10%;
 
                                 height: 60%;
