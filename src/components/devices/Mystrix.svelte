@@ -156,7 +156,7 @@ export function setColor(keyID: KeyID, color: Color) {
     .lp-border {
         background-color: var(--device-body);
         border: 2px solid var(--device-border);
-        border-radius: 3%;
+        border-radius: 2%;
         box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
 
         position: absolute;
@@ -237,16 +237,16 @@ export function setColor(keyID: KeyID, color: Color) {
         width: 100%;
 
         display: flex;
-        gap: 1.5%;
+        gap: 1.8%;
         flex-direction: column;
-        padding: 3%;
+        padding: 4%;
 
         z-index: 10;
 
         .lp-controls-row {
             height: 100%;
             display: flex;
-            gap: 1.5%;
+            gap: 1.8%;
         }
 
         .lp-btn-parent {
@@ -263,7 +263,7 @@ export function setColor(keyID: KeyID, color: Color) {
 
                 height: 100%;
                 width: 100%;
-                border-radius: 10%;
+                border-radius: 4%;
                 background-color: var(--device-button);
             }
 
