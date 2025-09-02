@@ -24,16 +24,16 @@
     function getCornerRadius (x: number, y: number) {
         switch (x + y * 10) {
             case 53:
-                return "polygon(80% 0, 100% 20%, 100% 100%, 0 100%, 0 0)";
+                return "polygon(81% -1%, 101% 19%, 101% 101%, -1% 101%, -1% -1%)";
 
             case 54:
-                return "polygon(20% 0, 100% 0, 100% 100%, 0 100%, 0 20%)";
+                return "polygon(19% -1%, 101% -1%, 101% 101%, -1% 101%, -1% 19%)";
 
             case 43:
-                return "polygon(100% 0, 100% 80%, 80% 100%, 0 100%, 0 0)";
+                return "polygon(101% -1%, 101% 81%, 81% 101%, -1% 101%, -1% -1%)";
 
             case 44:
-                return "polygon(100% 0, 100% 100%, 20% 100%, 0 80%, 0 0)";
+                return "polygon(101% -1%, 101% 101%, 19% 101%, -1% 81%, -1% -1%)";
 
             default:
                 return "unset";
