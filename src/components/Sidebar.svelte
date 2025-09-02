@@ -87,9 +87,9 @@
                     <div class={"load-project-button sidebar-button"} style="flex: 1;" on:click={() => dispatch("loadProject")}>
                         <span>{$t('sidebar.local_project')}</span>
                     </div>
-                    <div class={"load-project-button project-store-button sidebar-button"} style="flex: 1;" on:click={() => dispatch("openProjectStore")}>
+                    <!-- <div class={"load-project-button project-store-button sidebar-button"} style="flex: 1;" on:click={() => dispatch("openProjectStore")}>
                         <span>{$t('sidebar.project_store')}</span>
-                    </div>
+                    </div> -->
                     <!-- <div class={"load-project-button sidebar-button"} style="flex: 1;" on:click={() => dispatch("openDownloadedProjects")}>
                         <span>{$t('sidebar.downloaded_projects')}</span>
                     </div> -->
@@ -144,9 +144,9 @@
                     <div class={"load-project-button"} style="flex: 1;" on:click={() => dispatch("loadProject")}>
                         <span>{$t('sidebar.local_project')}</span>
                     </div>
-                    <div class={"load-project-button project-store-button"} style="flex: 1;" on:click={() => dispatch("openProjectStore")}>
+                    <!-- <div class={"load-project-button project-store-button"} style="flex: 1;" on:click={() => dispatch("openProjectStore")}>
                         <span>{$t('sidebar.project_store')}</span>
-                    </div>
+                    </div> -->
                     <!-- <div class={"load-project-button"} style="flex: 1;" on:click={() => dispatch("openDownloadedProjects")}>
                         <span>{$t('sidebar.downloaded_projects')}</span>
                     </div> -->
