@@ -6,5 +6,8 @@
     "detected": "{{device_name}} detected",
     "is_now_connected": "{{device_name}} is connected",
     "is_now_disconnected":"{{name}} is disconnected",
-    "project_failed_to_load":"Project failed to load: {{project_loading_error}}" 
+    "project_failed_to_load":"Project failed to load: {{project_loading_error}}",
+    "downloading_unipack": "Downloading Unipack from URL...",
+    "unipack_download_success": "Unipack downloaded and loaded successfully!",
+    "unipack_download_failed": "Failed to download Unipack: {{error}}"
 }

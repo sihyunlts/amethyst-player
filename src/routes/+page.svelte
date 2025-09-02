@@ -33,6 +33,7 @@
     import { themeMode, theme } from "$lib/stores/theme";
 
     import {browser} from "$app/environment";
+    import { page } from "$app/stores";
 
     import { GoogleAnalytics, ga } from '@beyonk/svelte-google-analytics'
 
@@ -79,7 +80,7 @@
     var player_ready = false;
 
     $: if (browser && player_ready) {
-        console.log("Saving setting");
+        // console.log("Saving setting");
         localStorage.setItem("settings", JSON.stringify(settings));
     }
 
@@ -229,12 +230,12 @@
     // Function to sync reactive vars with saved settings
     const syncReactiveVarsWithSettings = (deviceIndex) => {
         if (!reactiveVars[deviceIndex]) {
-            console.log('ERROR: reactiveVars[' + deviceIndex + '] is undefined');
+            // console.log('ERROR: reactiveVars[' + deviceIndex + '] is undefined');
             return;
         }
         
         const deviceSettings = settings.devices[deviceIndex];
-        console.log('Syncing device', deviceIndex, 'with settings:', deviceSettings);
+        // console.log('Syncing device', deviceIndex, 'with settings:', deviceSettings);
         
         // Always start with saved settings first
         const savedDeviceName = deviceSettings?.deviceInput || deviceSettings?.deviceOutput;
@@ -251,13 +252,13 @@
         reactiveVars[deviceIndex].deviceSettingAdvanced = deviceSettings?.deviceSettingAdvanced || false;
         reactiveVars[deviceIndex].enabled = deviceSettings?.enabled !== undefined ? deviceSettings.enabled : true;
         
-        console.log('Synced reactive vars - activeDevice:', reactiveVars[deviceIndex].activeDevice);
+        // console.log('Synced reactive vars - activeDevice:', reactiveVars[deviceIndex].activeDevice);
         
-        console.log('Set reactive vars to saved settings:', reactiveVars[deviceIndex]);
+        // console.log('Set reactive vars to saved settings:', reactiveVars[deviceIndex]);
         
         // If device is also connected, update with live MIDI device info
         if (midiDevices[deviceIndex]?.outputReady()) {
-            console.log('Device is connected, updating with live info');
+            // console.log('Device is connected, updating with live info');
             reactiveVars[deviceIndex].activeDevice = midiDevices[deviceIndex]?.name;
             reactiveVars[deviceIndex].activeInput = midiDevices[deviceIndex]?.activeInput?.name;
             reactiveVars[deviceIndex].activeOutput = midiDevices[deviceIndex]?.activeOutput?.name;
@@ -267,50 +268,50 @@
         
         // Force Svelte reactivity by reassigning the array
         reactiveVars = [...reactiveVars];
-        console.log('Final reactive vars after sync:', reactiveVars[deviceIndex]);
+        // console.log('Final reactive vars after sync:', reactiveVars[deviceIndex]);
     };
     
     // Reactive statement to handle device tab changes
     $: if (selectedDeviceTab) {
         selectedDeviceIndex = parseInt(selectedDeviceTab) - 1;
-        console.log('=== DEVICE SWITCH DEBUG ===');
-        console.log('Selected device tab:', selectedDeviceTab);
-        console.log('Selected device index:', selectedDeviceIndex);
-        console.log('Current settings for device:', settings.devices[selectedDeviceIndex]);
-        console.log('Current reactive vars for device (before sync):', reactiveVars[selectedDeviceIndex]);
+        // console.log('=== DEVICE SWITCH DEBUG ===');
+        // console.log('Selected device tab:', selectedDeviceTab);
+        // console.log('Selected device index:', selectedDeviceIndex);
+        // console.log('Current settings for device:', settings.devices[selectedDeviceIndex]);
+        // console.log('Current reactive vars for device (before sync):', reactiveVars[selectedDeviceIndex]);
         
         // Sync reactive vars with current state
         syncReactiveVarsWithSettings(selectedDeviceIndex);
         
-        console.log('Current reactive vars for device (after sync):', reactiveVars[selectedDeviceIndex]);
-        console.log('=== END DEBUG ===');
+        // console.log('Current reactive vars for device (after sync):', reactiveVars[selectedDeviceIndex]);
+        // console.log('=== END DEBUG ===');
     }
 
     const deviceKeyPressed: KeyPress = (deviceID: number, keyID: KeyID) => {
         // Only process input if device is enabled
         if (!settings.devices[deviceID]?.enabled) {
-            console.info(`Device ${deviceID} input ignored - device disabled`);
+            // console.info(`Device ${deviceID} input ignored - device disabled`);
             return;
         }
         
-        console.info(`Device ${deviceID} Button ${keyID} has been pressed`);
+        // console.info(`Device ${deviceID} Button ${keyID} has been pressed`);
         engine?.KeyPress(midiDeviceInfos[deviceID], keyID);
     };
 
     const deviceKeyReleased: KeyRelease = (deviceID: number, keyID: KeyID) => {
         // Only process input if device is enabled
         if (!settings.devices[deviceID]?.enabled) {
-            console.info(`Device ${deviceID} input ignored - device disabled`);
+            // console.info(`Device ${deviceID} input ignored - device disabled`);
             return;
         }
         
-        console.info(`Device ${deviceID} Button ${keyID} has been released`);
+        // console.info(`Device ${deviceID} Button ${keyID} has been released`);
         engine?.KeyRelease(midiDeviceInfos[deviceID], keyID);
     };
 
     const deviceEvent = (event: {}) => {
-        console.log(`Midi Device Event`);
-        console.log(event);
+        // console.log(`Midi Device Event`);
+        // console.log(event);
         switch (event.event) {
             case "opened":
                 midiDeviceInfos[event.deviceID] = {
@@ -527,7 +528,7 @@
     }
 
     const loadProject = () => {
-        console.log("Load File Selector");
+        // console.log("Load File Selector");
         var input = document.createElement("input");
         input.type = "file";
         input.accept = engine.fileFormat;
@@ -545,7 +546,7 @@
         
         try {
             await engine.LoadProjectFile(file);
-            console.log("Project Loaded");
+            // console.log("Project Loaded");
             projectStatus = "loaded";
             
             // Save to cache if requested (for imported projects)
@@ -557,7 +558,7 @@
                     engine.projectInfo.author || 'Unknown',
                     file
                 );
-                console.log("Project cached locally");
+                // console.log("Project cached locally");
             }
             
             ga.addEvent('project_loaded', {
@@ -588,11 +589,79 @@
         }
     };
 
+    const downloadAndLoadUnipack = async (url: string) => {
+        if (!url) return;
+        
+        projectStatus = "loading";
+        
+        try {
+            toast.push(
+                $t("toast.downloading_unipack"),
+                {
+                    theme: {
+                        "--toastColor": "#FFFFFF;",
+                        "--toastBackground": "#3182CE",
+                        "--toastBarBackground": "#2C5282",
+                    },
+                }
+            );
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
+            }
+            
+            const blob = await response.blob();
+            const fileName = url.split('/').pop()?.split('?')[0] || 'unipack.zip';
+            const file = new File([blob], fileName, { type: 'application/zip' });
+            
+            await loadProjectFile(file, true); // Save to cache
+            
+            toast.push(
+                $t("toast.unipack_download_success"),
+                {
+                    theme: {
+                        "--toastColor": "#FFFFFF;",
+                        "--toastBackground": "#48BB78",
+                        "--toastBarBackground": "#2F855A",
+                    },
+                }
+            );
+            
+            ga.addEvent('project_loaded_from_url', {
+                engine: settings.projectEngine,
+                url: url,
+                file_name: fileName,
+                project_name: engine.projectInfo?.name || 'Unknown'
+            });
+            
+        } catch (error) {
+            toast.push(
+                $t("toast.unipack_download_failed", { error: error.message }),
+                {
+                    theme: {
+                        "--toastColor": "#FFFFFF;",
+                        "--toastBackground": "#F56565",
+                        "--toastBarBackground": "#C53030",
+                    },
+                    duration: 8000
+                }
+            );
+            projectStatus = "not loaded";
+            
+            ga.addEvent('project_failed_to_load_from_url', {
+                engine: settings.projectEngine,
+                url: url,
+                error: error.toString()
+            });
+        }
+    };
+
     const handleProjectStoreSelection = (event: CustomEvent) => {
         const { file, projectInfo } = event.detail;
         popup["projectStore"] = false;
         
-        console.log("Project selected from store:", projectInfo.name);
+        // console.log("Project selected from store:", projectInfo.name);
         loadProjectFile(file);
         
         ga.addEvent('project_loaded_from_store', {
@@ -604,7 +673,7 @@
     };
 
     const importProject = () => {
-        console.log("Import Project - File Selector");
+        // console.log("Import Project - File Selector");
         var input = document.createElement("input");
         input.type = "file";
         input.accept = engine.fileFormat;
@@ -675,7 +744,7 @@
                 
                 // 1. Send to the specific device the engine requested (original behavior)
                 if (settings.devices[deviceID]?.enabled !== false && midiDevices[deviceID]?.outputReady()) {
-                    console.log('Sending to target device', deviceID);
+                    // console.log('Sending to target device', deviceID);
                     midiDevices[deviceID].setColor(keyID, color);
                 }
                 
@@ -686,7 +755,7 @@
                         const isReady = midiDevices[i]?.outputReady();
                         
                         if (isEnabled && isReady) {
-                            console.log('Broadcasting to additional device', i);
+                            // console.log('Broadcasting to additional device', i);
                             midiDevices[i].setColor(keyID, color);
                         }
                     }
@@ -793,7 +862,7 @@
                 }
             }
             
-            console.log('Engine getDevices() returning:', allDevices.length, 'devices (', allDevices.filter(d => d.id >= 0).length, 'MIDI enabled)');
+            // console.log('Engine getDevices() returning:', allDevices.length, 'devices (', allDevices.filter(d => d.id >= 0).length, 'MIDI enabled)');
             return allDevices;
         },
 
@@ -810,12 +879,12 @@
     let webMidiAvailable = false;
 
     if (browser) {
-        console.log('=== INITIAL LOAD DEBUG ===');
-        console.log('Initial settings:', settings);
-        console.log('Initial reactiveVars:', reactiveVars);
-        console.log('Initial selectedDeviceTab:', selectedDeviceTab);
-        console.log('Initial selectedDeviceIndex:', selectedDeviceIndex);
-        console.log('=== END INITIAL DEBUG ===');
+        // console.log('=== INITIAL LOAD DEBUG ===');
+        // console.log('Initial settings:', settings);
+        // console.log('Initial reactiveVars:', reactiveVars);
+        // console.log('Initial selectedDeviceTab:', selectedDeviceTab);
+        // console.log('Initial selectedDeviceIndex:', selectedDeviceIndex);
+        // console.log('=== END INITIAL DEBUG ===');
         
         // Check if this is first time user
         if (!localStorage.getItem("amethyst_tutorial_completed")) {
@@ -898,6 +967,17 @@
             settings.projectEngine = Object.keys(projectEngines)[0]; //Revert to the first one
         }
         engine = projectEngines[settings.projectEngine](api);
+        
+        // Check for unipack_url parameter and automatically download/load
+        if ($page.url.searchParams.has('unipack_url')) {
+            const unipackUrl = $page.url.searchParams.get('unipack_url');
+            if (unipackUrl) {
+                // Small delay to ensure everything is initialized
+                setTimeout(() => {
+                    downloadAndLoadUnipack(unipackUrl);
+                }, 1000);
+            }
+        }
     }
 
     onMount(() => {
@@ -1113,6 +1193,10 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="build-info">
+                        <span>{__BUILD_STRING__}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1181,7 +1265,7 @@
                                                 }
                                             }
                                             
-                                            console.log('Device', selectedDeviceIndex + 1, 'enabled:', e.detail.checked);
+                                            // console.log('Device', selectedDeviceIndex + 1, 'enabled:', e.detail.checked);
                                         }}
                                     />
                                 </div>
@@ -1198,23 +1282,23 @@
                                                         options={availableDevices}
                                                         placeholder={$t("device.no_device")}
                                                         on:change={(e) => {
-                                                        console.log('Device dropdown changed:', e.detail.value, 'for device index:', selectedDeviceIndex);
+                                                        // console.log('Device dropdown changed:', e.detail.value, 'for device index:', selectedDeviceIndex);
                                                         
                                                         // Handle saved devices (in parentheses) and empty selection
                                                         let deviceName = e.detail.value;
                                                         if (deviceName === '' || deviceName === null || deviceName === undefined) {
                                                             // No device selected - clear everything
                                                             deviceName = undefined;
-                                                            console.log('No device selected - clearing configuration');
+                                                            // console.log('No device selected - clearing configuration');
                                                         } else if (deviceName && deviceName.startsWith('(') && deviceName.endsWith(')')) {
                                                             // Remove parentheses from saved device name
                                                             deviceName = deviceName.slice(1, -1);
-                                                            console.log('Selected saved device (not currently available):', deviceName);
+                                                            // console.log('Selected saved device (not currently available):', deviceName);
                                                         }
                                                         
                                                         settings.devices[selectedDeviceIndex].deviceInput = deviceName;
                                                         settings.devices[selectedDeviceIndex].deviceOutput = deviceName;
-                                                        console.log('Updated settings.devices[' + selectedDeviceIndex + ']:', settings.devices[selectedDeviceIndex]);
+                                                        // console.log('Updated settings.devices[' + selectedDeviceIndex + ']:', settings.devices[selectedDeviceIndex]);
                                                         
                                                         if (deviceName && GridController.availableDevices()[deviceName]) {
                                                             // Device is currently available - connect it
@@ -1226,7 +1310,7 @@
                                                             // No device selected or device not available - disconnect
                                                             midiDevices[selectedDeviceIndex].disconnect();
                                                             if (deviceName) {
-                                                                console.log('Device saved but not currently available:', deviceName);
+                                                                // console.log('Device saved but not currently available:', deviceName);
                                                             }
                                                         }
                                                         // Sync UI with updated settings
@@ -1343,7 +1427,7 @@
                                             checked={currentDeviceAdvancedMode}
                                             on:change={(e) => {
                                                 updateAdvancedMode(e.detail.checked);
-                                                console.log('Advanced mode changed for device', selectedDeviceIndex, ':', e.detail.checked);
+                                                // console.log('Advanced mode changed for device', selectedDeviceIndex, ':', e.detail.checked);
                                             }}
                                         />
                                         </div>
@@ -1753,6 +1837,22 @@
             font-family: inherit !important;
             font-size: inherit !important;
             font-weight: 500;
+        }
+    }
+
+    .build-info {
+        padding-top: 20px;
+        border-top: 1px solid var(--bg3);
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        span {
+            font-family: "Roboto", sans-serif;
+            font-size: 14px;
+            color: var(--text2);
+            font-weight: 300;
         }
     }
 
