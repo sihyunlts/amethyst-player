@@ -3,6 +3,7 @@ import LaunchpadMk2 from "./LaunchpadMk2.svelte";
 import LaunchpadX from "./LaunchpadX.svelte";
 import LaunchpadProMk3 from "./LaunchpadProMk3.svelte";
 import Mystrix from "./Mystrix.svelte";
+import MIDIFighter64 from "./MIDIFighter64.svelte";
 
 
 export let virtualDeviceComponents : {[name:string]: any} = {
@@ -11,6 +12,7 @@ export let virtualDeviceComponents : {[name:string]: any} = {
   "Launchpad X": { component: LaunchpadX },
   "Launchpad Pro MK2": { component: LaunchpadProMk2 },
   "Launchpad MK2": { component: LaunchpadMk2 },
+  "MIDI Fighter 64": { component: MIDIFighter64 },
 } as const;
 
 
