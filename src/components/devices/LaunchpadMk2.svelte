@@ -94,7 +94,7 @@ export function setColor(keyID: KeyID, color: Color) {
     .lp-border {
         background: var(--device-body);
         border: 2px solid var(--device-border);
-        border-radius: 3%;
+        border-radius: 2.5%;
         box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
 
         position: relative;
@@ -108,7 +108,7 @@ export function setColor(keyID: KeyID, color: Color) {
         width: 100%;
 
         display: flex;
-        gap: 1.5%;
+        gap: 1%;
         flex-direction: column;
 
         padding: 4%;
@@ -116,7 +116,7 @@ export function setColor(keyID: KeyID, color: Color) {
         .lp-controls-row {
             height: 100%;
             display: flex;
-            gap: 1.5%;
+            gap: 1%;
         }
 
         .lp-btn-parent {
@@ -128,8 +128,8 @@ export function setColor(keyID: KeyID, color: Color) {
             align-items: center;
 
             :global(.lp-side-btn) {
-                height: 90%;
-                width: 90%;
+                height: 66%;
+                width: 66%;
                 border-radius: 50%;
                 background-color: var(--device-button);
 
@@ -141,7 +141,7 @@ export function setColor(keyID: KeyID, color: Color) {
                     height: 100%;
                     width: 100%;
                     
-                    padding: 3px;
+                    padding: 8%;
                     background-clip: content-box;
                     background-color: var(--device-button-overlay);
                     border-radius: 50%;
@@ -154,7 +154,7 @@ export function setColor(keyID: KeyID, color: Color) {
 
                 height: 92%;
                 width: 92%;
-                border-radius: 10%;
+                border-radius: 8%;
                 background-color: var(--device-button);
             }
         }

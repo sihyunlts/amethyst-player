@@ -115,7 +115,7 @@ export function setColor(keyID: KeyID, color: Color) {
         width: 100%;
 
         display: flex;
-        gap: 1.5%;
+        gap: 1%;
         flex-direction: column;
 
         padding: 4%;
@@ -123,7 +123,7 @@ export function setColor(keyID: KeyID, color: Color) {
         .lp-controls-row {
             height: 100%;
             display: flex;
-            gap: 1.5%;
+            gap: 1%;
         }
 
         .lp-btn-parent {
@@ -138,10 +138,43 @@ export function setColor(keyID: KeyID, color: Color) {
                 padding: 0;
                 border: none;
 
-                height: 90%;
-                width: 90%;
+                height: 72%;
+                width: 72%;
                 border-radius: 50%;
                 background-color: var(--device-button);
+
+                &::after {
+                  content: "";
+                  display: block;
+                  box-sizing: border-box;
+
+                  height: 100%;
+                  width: 100%;
+                  
+                  padding: 8%;
+                  background-clip: content-box;
+                  background-color: var(--device-button-overlay);
+                  border-radius: 50%;
+                }
+            }
+
+            :global(.lp-normal-btn) {
+                border: none;
+
+                height: 92%;
+                width: 92%;
+                border-radius: 8%;
+                background-color: var(--device-button);
+            }
+
+            :global(.lp-shift-btn) {
+                padding: 0;
+                border: none;
+
+                height: 40%;
+                width: 40%;
+                border-radius: 50%;
+                background-color: var(--device-border);
 
                 &::after {
                   content: "";
@@ -158,32 +191,13 @@ export function setColor(keyID: KeyID, color: Color) {
                 }
             }
 
-            :global(.lp-normal-btn) {
-                border: none;
-
-                height: 92%;
-                width: 92%;
-                border-radius: 10%;
-                background-color: var(--device-button);
-            }
-
-            :global(.lp-shift-btn) {
-                padding: 0;
-                border: none;
-
-                height: 35%;
-                width: 35%;
-                border-radius: 50%;
-                background-color: var(--device-body);
-            }
-
         }
     }
 
     :global(.lp-mode-light) {
-        width: 3%;
-        height: 3%;
-        border-radius: 30% 30% 0 0;
+        width: 1.4%;
+        height: 0.8%;
+        border-radius: 2% 2% 0 0;
         background-color: rgb(80, 80, 80);
 
         position: absolute;
