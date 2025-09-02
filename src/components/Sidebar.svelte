@@ -198,6 +198,10 @@
                 </div>
             {/if}
         {/if}
+        <div class="sidebar-block-notice">
+            <span class="block-title">Warning</span>
+            <p>This Amethyst Player is not an official version. It is an experimental version made for personal use by sihyunlights, and it may be unstable. Please use the <a href="https://play.203.io">official version.</a></p>
+        </div>
     </div>
 
     <div style="height: 100%"></div>
@@ -295,6 +299,32 @@
 
                 letter-spacing: 0.125rem;
                 color: var(--text2);
+            }
+        }
+
+        .sidebar-block-notice {
+            padding: 20px;
+            gap: 10px;   
+
+            p {
+                color: var(--text2);
+                font-size: 14px;
+                line-height: 1.3;
+            }
+
+            a {
+                color: var(--text2);
+                text-decoration: underline;
+            }
+
+            .block-title {
+                font-family: 'Roboto', sans-serif;
+                font-style: normal;
+                font-weight: 300;
+                font-size: 20px;
+
+                color: var(--text2, rgba(245, 245, 245, 0.52));
+                margin-bottom: 10px;
             }
         }
 
