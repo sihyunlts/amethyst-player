@@ -6,5 +6,8 @@
     "detected": "{{device_name}} 감지됨",
     "is_now_connected": "{{device_name}} 연결됨",
     "is_now_disconnected":"{{name}} 연결 해제됨",
-    "project_failed_to_load":"프로젝트 불러오기 실패: {{project_loading_error}}" 
+    "project_failed_to_load":"프로젝트 불러오기 실패: {{project_loading_error}}" ,
+    "downloading_unipack": "URL에서 유니팩을 다운로드하는 중...",
+    "unipack_download_success": "유니팩 다운로드 및 불러오기 성공!",
+    "unipack_download_failed": "유니팩 다운로드 실패: {{error}}"
 }
