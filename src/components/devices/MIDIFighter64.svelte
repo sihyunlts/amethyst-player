@@ -44,7 +44,7 @@
         }
         let index = getKeypadIndex(keyID)
         if(keyPads[index]) {
-            var screen_color = color.overlay(new Color(ColorType.RGB, [80, 80, 80]));
+            var screen_color = color.overlay(new Color(ColorType.RGB, [0x80, 0x80, 0x80]));
             keyPads[index].set_color(screen_color);           
         }
     }
