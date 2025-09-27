@@ -15,7 +15,8 @@ export class GridController {
     name?: string;
     activeInput?: Input;
     activeOutput?: Output;
-    activeConfig?: GridDeviceConfig
+    activeConfig?: GridDeviceConfig;
+    customPaletteChannel?: number;
 
     keyPress: KeyPress;
     keyRelease: KeyRelease;
@@ -197,11 +198,12 @@ export class GridController {
         this.connect(device.input, device.output, device.config);
     }
 
-    connect(input_device:Input|undefined, output_device:Output|undefined, config?:GridDeviceConfig|string) 
+    connect(input_device:Input|undefined, output_device:Output|undefined, config?:GridDeviceConfig|string, customPaletteChannel?: number) 
     {
         this.disconnect();
         this.activeInput = input_device;
         this.activeOutput = output_device;
+        this.customPaletteChannel = customPaletteChannel;
 
         if(input_device === undefined && output_device === undefined)
         {
@@ -370,7 +372,8 @@ export class GridController {
             return;
         if(color.type === ColorType.Palette)
         {
-            let channel = this.activeConfig.paletteChannel[color.palette()];
+            // Use custom palette channel if set, otherwise fall back to config
+            let channel = this.customPaletteChannel !== undefined ? this.customPaletteChannel : this.activeConfig.paletteChannel[color.palette()];
             let value = color.index();
             if(channel)
             {

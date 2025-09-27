@@ -4,6 +4,8 @@
     "midi_input_device": "MIDI Input Device",
     "midi_output_device": "MIDI Output Device",
     "midi_device_config": "MIDI Device Config",
+    "channel": "Channel",
+    "default": "Default",
     "advanced_mode": "Advanced Mode",
     "no_config": "No Config",
     "no_device": "No Device",

@@ -4,6 +4,8 @@
     "midi_input_device": "MIDI 입력 디바이스",
     "midi_output_device": "MIDI 출력 디바이스",
     "midi_device_config": "MIDI 디바이스 설정",
+    "channel": "채널",
+    "default": "기본값",
     "advanced_mode": "고급 모드",
     "no_config": "설정 안 함",
     "no_device": "장치 없음",

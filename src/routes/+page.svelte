@@ -60,10 +60,10 @@
         virtualDeviceScale: "100%",
         projectEngine: "Unipack", //Object.keys(projectEngines)[0],
         devices: [
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true },
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true },
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true },
-            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true }
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true, paletteChannel: 0 },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true, paletteChannel: 0 },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true, paletteChannel: 0 },
+            { deviceInput: undefined, deviceOutput: undefined, deviceConfig: undefined, deviceSettingAdvanced: false, enabled: true, paletteChannel: 0 }
         ],
         language: undefined,
         keypressColor: Object.keys(keyPressColors)[0],
@@ -158,6 +158,46 @@
     $: availableOutputs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(getAvailableDeviceOptions('outputs')) : [];
     $: availableConfigs = browser && deviceListUpdateTrigger >= 0 ? Object.keys(GridController.configList()) : [];
     
+    // Reactive palette channel options that update when device config changes
+    $: paletteChannelOptions = (() => {
+        const config = getDeviceConfig(reactiveVars[selectedDeviceIndex]?.activeConfig);
+        const defaultChannel = getDefaultChannel(config);
+        
+        return config ? 
+            [`${$t("device.default")} (Ch. ${defaultChannel})`, "Ch. 1", "Ch. 2", "Ch. 3", "Ch. 4", "Ch. 5", "Ch. 6"] :
+            [$t("device.default"), "Ch. 1", "Ch. 2", "Ch. 3", "Ch. 4", "Ch. 5", "Ch. 6"];
+    })();
+    
+    // Helper function to get device config
+    const getDeviceConfig = (configName: string | undefined): GridDeviceConfig | undefined => {
+        return configName ? GridController.configList()[configName] : undefined;
+    };
+
+    // Helper function to get default channel from config
+    const getDefaultChannel = (config: GridDeviceConfig | undefined): number => {
+        return config?.paletteChannel?.classic || 1;
+    };
+
+    // Helper function to extract channel number from "Ch. X" format
+    const extractChannelNumber = (value: string): number => {
+        const match = value.match(/Ch\.\s*(\d+)/);
+        return match ? parseInt(match[1]) : parseInt(value) || 1;
+    };
+
+    // Helper function to check if value is default option
+    const isDefaultOption = (value: string): boolean => {
+        return value.startsWith('Default') || value.startsWith($t("device.default")) || value === $t("device.default");
+    };
+
+    // Helper function to get palette channel dropdown value
+    const getPaletteChannelValue = (activePaletteChannel: number, activeConfig: string | undefined): string => {
+        if (activePaletteChannel === 0) {
+            const config = getDeviceConfig(activeConfig);
+            return config ? `${$t("device.default")} (Ch. ${getDefaultChannel(config)})` : $t("device.default");
+        }
+        return `Ch. ${activePaletteChannel}`;
+    };
+
     // Function to update advanced mode
     const updateAdvancedMode = (newValue) => {
         if (reactiveVars[selectedDeviceIndex]) {
@@ -251,6 +291,7 @@
         reactiveVars[deviceIndex].activeConfig = deviceSettings?.deviceConfig || undefined;
         reactiveVars[deviceIndex].deviceSettingAdvanced = deviceSettings?.deviceSettingAdvanced || false;
         reactiveVars[deviceIndex].enabled = deviceSettings?.enabled !== undefined ? deviceSettings.enabled : true;
+        reactiveVars[deviceIndex].activePaletteChannel = deviceSettings?.paletteChannel !== undefined ? deviceSettings.paletteChannel : 0;
         
         // console.log('Synced reactive vars - activeDevice:', reactiveVars[deviceIndex].activeDevice);
         
@@ -264,6 +305,11 @@
             reactiveVars[deviceIndex].activeOutput = midiDevices[deviceIndex]?.activeOutput?.name;
             reactiveVars[deviceIndex].activeConfig = midiDevices[deviceIndex]?.activeConfig?.name;
             // Keep the saved advanced mode setting even when connected
+        } else {
+            // If device is not connected, ensure activeConfig matches the saved setting
+            const config = getDeviceConfig(deviceSettings?.deviceConfig);
+            midiDevices[deviceIndex].activeConfig = config;
+            reactiveVars[deviceIndex].activeConfig = deviceSettings?.deviceConfig;
         }
         
         // Force Svelte reactivity by reassigning the array
@@ -379,7 +425,8 @@
                         midiDevices[i].connect(
                             GridController.availableDeviceInputs()[event.device],
                             GridController.availableDeviceOutputs()[event.device],
-                            settings.devices[i].deviceConfig
+                            settings.devices[i].deviceConfig,
+                            settings.devices[i].paletteChannel === 0 ? undefined : settings.devices[i].paletteChannel
                         );
                         break;
                     }
@@ -870,10 +917,10 @@
     };
 
     let reactiveVars = [
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true },
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true },
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true },
-        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true }
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true, activePaletteChannel: 0 },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true, activePaletteChannel: 0 },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true, activePaletteChannel: 0 },
+        { activeDevice: undefined, activeInput: undefined, activeOutput: undefined, activeConfig: undefined, deviceSettingAdvanced: false, enabled: true, activePaletteChannel: 0 }
     ];
 
     let webMidiAvailable = false;
@@ -901,6 +948,7 @@
                 settings.devices[0].deviceConfig = savedSettings.deviceConfig;
                 settings.devices[0].deviceSettingAdvanced = savedSettings.deviceSettingAdvanced || false;
                 settings.devices[0].enabled = true; // Enable by default for migrated devices
+                settings.devices[0].paletteChannel = savedSettings.paletteChannel !== undefined ? savedSettings.paletteChannel : 0; // Default to device default
                 delete savedSettings.deviceInput;
                 delete savedSettings.deviceOutput;
                 delete savedSettings.deviceConfig;
@@ -939,7 +987,8 @@
                             midiDevices[i].connect(
                                 GridController.availableDeviceInputs()[device.deviceInput],
                                 GridController.availableDeviceOutputs()[device.deviceOutput],
-                                GridController.configList()[device.deviceConfig!]
+                                GridController.configList()[device.deviceConfig!],
+                                device.paletteChannel === 0 ? undefined : device.paletteChannel
                             );
                         }
                     }
@@ -1342,11 +1391,19 @@
                                                         midiDeviceInfos[selectedDeviceIndex] = undefined;
                                                         
                                                         if (deviceName && GridController.availableDeviceInputs()[deviceName]) {
-                                                            midiDevices[selectedDeviceIndex].connect(
-                                                                GridController.availableDeviceInputs()[deviceName],
-                                                                midiDevices[selectedDeviceIndex].activeOutput,
-                                                                midiDevices[selectedDeviceIndex].activeConfig
-                                                            );
+                                                            // Only connect if we have at least one device (input or output)
+                                                            if (GridController.availableDeviceInputs()[deviceName] || midiDevices[selectedDeviceIndex].activeOutput) {
+                                                                // Ensure activeConfig is set if we have a device config
+                                                                const config = getDeviceConfig(settings.devices[selectedDeviceIndex].deviceConfig);
+                                                                midiDevices[selectedDeviceIndex].activeConfig = config;
+                                                                
+                                                                midiDevices[selectedDeviceIndex].connect(
+                                                                    GridController.availableDeviceInputs()[deviceName],
+                                                                    midiDevices[selectedDeviceIndex].activeOutput,
+                                                                    config,
+                                                                    settings.devices[selectedDeviceIndex].paletteChannel === 0 ? undefined : settings.devices[selectedDeviceIndex].paletteChannel
+                                                                );
+                                                            }
                                                         }
                                                         syncReactiveVarsWithSettings(selectedDeviceIndex);
                                                     }}
@@ -1376,13 +1433,53 @@
                                                         midiDeviceInfos[selectedDeviceIndex] = undefined;
                                                         
                                                         if (deviceName && GridController.availableDeviceOutputs()[deviceName]) {
-                                                            midiDevices[selectedDeviceIndex].connect(
-                                                                midiDevices[selectedDeviceIndex].activeInput,
-                                                                GridController.availableDeviceOutputs()[deviceName],
-                                                                midiDevices[selectedDeviceIndex].activeConfig
-                                                            );
+                                                            // Only connect if we have at least one device (input or output)
+                                                            if (midiDevices[selectedDeviceIndex].activeInput || GridController.availableDeviceOutputs()[deviceName]) {
+                                                                // Ensure activeConfig is set if we have a device config
+                                                                const config = getDeviceConfig(settings.devices[selectedDeviceIndex].deviceConfig);
+                                                                midiDevices[selectedDeviceIndex].activeConfig = config;
+                                                                
+                                                                midiDevices[selectedDeviceIndex].connect(
+                                                                    midiDevices[selectedDeviceIndex].activeInput,
+                                                                    GridController.availableDeviceOutputs()[deviceName],
+                                                                    config,
+                                                                    settings.devices[selectedDeviceIndex].paletteChannel === 0 ? undefined : settings.devices[selectedDeviceIndex].paletteChannel
+                                                                );
+                                                            }
                                                         }
                                                         syncReactiveVarsWithSettings(selectedDeviceIndex);
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div class="setting {mobileView? 'mobile' : ''}">
+                                            <div class="setting-name">
+                                                <span>{$t("device.channel")}</span>
+                                            </div>
+
+                                            <div class="setting-option">
+                                                <Dropdown
+                                                        value={getPaletteChannelValue(
+                                                            reactiveVars[selectedDeviceIndex]?.activePaletteChannel,
+                                                            reactiveVars[selectedDeviceIndex]?.activeConfig
+                                                        )}
+                                                        options={paletteChannelOptions}
+                                                        on:change={(e) => {
+                                                        const channel = isDefaultOption(e.detail.value) ? 0 : extractChannelNumber(e.detail.value);
+                                                        settings.devices[selectedDeviceIndex].paletteChannel = channel;
+                                                        reactiveVars[selectedDeviceIndex].activePaletteChannel = channel;
+                                                        reactiveVars = [...reactiveVars]; // Force reactivity
+                                                        
+                                                        // Reconnect device with new palette channel if connected
+                                                        if (midiDevices[selectedDeviceIndex]?.activeInput && midiDevices[selectedDeviceIndex]?.activeOutput) {
+                                                            midiDevices[selectedDeviceIndex].connect(
+                                                                midiDevices[selectedDeviceIndex].activeInput,
+                                                                midiDevices[selectedDeviceIndex].activeOutput,
+                                                                midiDevices[selectedDeviceIndex].activeConfig,
+                                                                channel === 0 ? undefined : channel
+                                                            );
+                                                        }
                                                     }}
                                                 />
                                             </div>
@@ -1403,15 +1500,26 @@
                                                     settings.devices[selectedDeviceIndex].deviceConfig = e.detail.value;
                                                     if (e.detail.value) {
                                                         midiDeviceInfos[selectedDeviceIndex] = undefined;
-                                                        midiDevices[selectedDeviceIndex].connect(
-                                                            midiDevices[selectedDeviceIndex].activeInput,
-                                                            midiDevices[selectedDeviceIndex].activeOutput,
-                                                            GridController.configList()[e.detail.value]
-                                                        );
+                                                        // Update activeConfig immediately
+                                                        midiDevices[selectedDeviceIndex].activeConfig = getDeviceConfig(e.detail.value);
+                                                        // Only connect if we have at least one device (input or output)
+                                                        if (midiDevices[selectedDeviceIndex].activeInput || midiDevices[selectedDeviceIndex].activeOutput) {
+                                                            midiDevices[selectedDeviceIndex].connect(
+                                                                midiDevices[selectedDeviceIndex].activeInput,
+                                                                midiDevices[selectedDeviceIndex].activeOutput,
+                                                                getDeviceConfig(e.detail.value),
+                                                                settings.devices[selectedDeviceIndex].paletteChannel === 0 ? undefined : settings.devices[selectedDeviceIndex].paletteChannel
+                                                            );
+                                                        }
                                                     } else {
+                                                        // Clear activeConfig when no config is selected
+                                                        midiDevices[selectedDeviceIndex].activeConfig = undefined;
                                                         midiDevices[selectedDeviceIndex].disconnect();
                                                     }
                                                     syncReactiveVarsWithSettings(selectedDeviceIndex);
+                                                    
+                                                    // Force palette channel dropdown to update by triggering reactivity
+                                                    reactiveVars = [...reactiveVars];
                                                 }}
                                             />
                                         </div>
