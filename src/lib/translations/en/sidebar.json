@@ -45,5 +45,6 @@
     "invalid_email": "Please enter a valid email address",
     "invalid_url": "Please enter a valid URL",
     "sort_popular": "Popular",
-    "sort_latest": "Latest"
+    "sort_latest": "Latest",
+    "volume": "Volume"
 }

@@ -13,6 +13,8 @@
     import Usb from "carbon-icons-svelte/lib/Usb.svelte"
     import LogoGithub from "carbon-icons-svelte/lib/LogoGithub.svelte"
     import LogoDiscord from "carbon-icons-svelte/lib/LogoDiscord.svelte"
+    import VolumeMute from "carbon-icons-svelte/lib/VolumeMute.svelte"
+    import VolumeUp from "carbon-icons-svelte/lib/VolumeUp.svelte"
 
     import Button from "./Button.svelte";
     import Slider from "./Slider.svelte";
@@ -21,9 +23,12 @@
 
     import { createEventDispatcher, afterUpdate, onMount} from 'svelte';
     import { t, locales } from '$lib/translations'; 
+    import { browser } from '$app/environment';
 
     import type {ProjectRT} from "../engine/ProjectRT";
     import { Mobile, Stop } from "carbon-icons-svelte"
+    import * as howler from 'howler';
+    const Howler = howler.Howler;
 
     export let project:ProjectRT;
     export let status:string;
@@ -47,14 +52,84 @@
         playProgress: 0
     }
 
+    // Volume control
+    let volume = 100;
+    let previousVolume = 100; // Store volume before muting
+    let isMuted = false;
+    
     onMount(() => {
+        // Load volume from localStorage
+        if (browser) {
+            const savedVolume = localStorage.getItem('volume');
+            if (savedVolume !== null) {
+                volume = parseFloat(savedVolume);
+            }
+            Howler.volume(volume / 100);
+        }
+
+        // Keyboard shortcuts
+        const handleKeyDown = (e) => {
+            // M key to toggle mute
+            if (e.key === 'm' || e.key === 'M') {
+                toggleMute();
+            }
+            // Arrow up to increase volume
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                volume = Math.min(100, volume + 5);
+                handleVolumeChange({ detail: volume });
+            }
+            // Arrow down to decrease volume
+            else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                volume = Math.max(0, volume - 5);
+                handleVolumeChange({ detail: volume });
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
         setInterval(() => {
         if(demoplayValues.playProgress != project?.demoplay?.progress)
             demoplayValues.playProgress = project?.demoplay?.progress;
 
         if(demoplayValues.isPlaying != (project?.demoplay?.status === "PLAYING"))
             demoplayValues.isPlaying = project?.demoplay?.status === "PLAYING";
-    }, 1000/30)});
+    }, 1000/30);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    });
+
+    function handleVolumeChange(e) {
+        volume = e.detail;
+        isMuted = volume === 0;
+        if (!isMuted) {
+            previousVolume = volume;
+        }
+        Howler.volume(volume / 100);
+        if (browser) {
+            localStorage.setItem('volume', volume.toString());
+        }
+    }
+
+    function toggleMute() {
+        if (isMuted) {
+            // Unmute: restore previous volume
+            volume = previousVolume > 0 ? previousVolume : 50;
+            isMuted = false;
+        } else {
+            // Mute: save current volume and set to 0
+            previousVolume = volume;
+            volume = 0;
+            isMuted = true;
+        }
+        Howler.volume(volume / 100);
+        if (browser) {
+            localStorage.setItem('volume', volume.toString());
+        }
+    }
 </script>
 
 <div class="sidebar {animation ? 'animation' : ''} {mobile ? 'mobile' : ''} {$$props.class} {show ? '' : 'hide'}" style={$$props.style} >
@@ -198,6 +273,23 @@
                 </div>
             {/if}
         {/if}
+        {#if !mobile}
+        <div class="sidebar-block-volume">
+            <span class="block-title">{$t('sidebar.volume')}</span>
+            <div class="volume-control">
+                <div class="volume-icon" on:click={toggleMute}>
+                    {#if volume === 0}
+                        <VolumeMute size={24}/>
+                    {:else}
+                        <VolumeUp size={24}/>
+                    {/if}
+                </div>
+                <Slider min={0} value={volume} max={100} on:change={handleVolumeChange}/>
+                <span class="volume-percentage">{Math.round(volume)}%</span>
+            </div>
+        </div>
+        {/if}
+
         <div class="sidebar-block-notice">
             <span class="block-title">Warning</span>
             <p>This Amethyst Player is not an official version. It is an experimental version made for personal use by sihyunlights, and it may be unstable. Please use the <a href="https://play.203.io">official version.</a></p>
@@ -325,6 +417,59 @@
 
                 color: var(--text2, rgba(245, 245, 245, 0.52));
                 margin-bottom: 10px;
+            }
+        }
+
+        .sidebar-block-volume {
+            padding: 20px;
+            gap: 10px;
+
+            .block-title {
+                font-family: 'Roboto', sans-serif;
+                font-style: normal;
+                font-weight: 300;
+                font-size: 20px;
+
+                color: var(--text2, rgba(245, 245, 245, 0.52));
+                margin-bottom: 10px;
+            }
+
+            .volume-control {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 14px;
+
+                .volume-icon {
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    color: var(--text1);
+                    cursor: pointer;
+                    transition: transform 0.2s ease, color 0.2s ease;
+
+                    &:hover {
+                        transform: scale(1.1);
+                        color: var(--text2);
+                    }
+
+                    &:active {
+                        transform: scale(0.95);
+                    }
+                }
+
+                .volume-percentage {
+                    font-family: 'Roboto', sans-serif;
+                    font-style: normal;
+                    font-weight: 300;
+                    font-size: 16px;
+                    min-width: 42px;
+                    text-align: right;
+                    color: var(--text2);
+                    user-select: none;
+                }
             }
         }
 

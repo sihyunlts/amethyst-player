@@ -45,5 +45,6 @@
     "invalid_email": "올바른 메일 주소를 입력해주세요",
     "invalid_url": "올바른 URL을 입력해주세요",
     "sort_popular": "인기순",
-    "sort_latest": "최신순"
+    "sort_latest": "최신순",
+    "volume": "볼륨"
 }
