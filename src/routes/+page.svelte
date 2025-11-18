@@ -970,6 +970,9 @@
                 webMidiAvailable = midi_available;
                 
                 if (midi_available) {
+                    // Trigger device list update to populate dropdowns
+                    deviceListUpdateTrigger++;
+                    
                     toast.push(
                         $t("toast.webmidi_available"),
                         {
