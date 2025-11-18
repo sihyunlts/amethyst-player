@@ -65,7 +65,18 @@ export class GridController {
         {
             for(const output of WebMidi.outputs)
             {
-                if(input.name === output.name)
+                // Check if input and output names match
+                // Direct match OR Input ends with "Out" and Output ends with "In" with same base name
+                let isMatch = input.name === output.name;
+                
+                if(!isMatch && input.name.endsWith(' Out') && output.name.endsWith(' In'))
+                {
+                    const inputBase = input.name.slice(0, -4); // Remove ' Out'
+                    const outputBase = output.name.slice(0, -3); // Remove ' In'
+                    isMatch = inputBase === outputBase;
+                }
+                
+                if(isMatch)
                 {   
                     let config: GridDeviceConfig | undefined = undefined;
                     for (const name in DeviceConfigs) 
