@@ -225,7 +225,37 @@
         
         return availableDevices;
     };
-    
+
+    // Resolve dropdown option key from a runtime WebMIDI port id (used for duplicate-name ports).
+    const findPortKeyById = (ports: {[key: string]: any}, portId?: string): string | undefined => {
+        if (!portId) return undefined;
+        return Object.keys(ports).find((key) => ports[key]?.id === portId);
+    };
+
+    // Reverse-lookup the availableDevices key from the currently active input/output id pair.
+    const findPairedDeviceKey = (deviceIndex: number): string | undefined => {
+        const activeInputId = midiDevices[deviceIndex]?.activeInput?.id;
+        const activeOutputId = midiDevices[deviceIndex]?.activeOutput?.id;
+        if (!activeInputId || !activeOutputId) return undefined;
+
+        const devices = GridController.availableDevices();
+        return Object.keys(devices).find((key) =>
+            devices[key]?.input?.id === activeInputId &&
+            devices[key]?.output?.id === activeOutputId
+        );
+    };
+
+    const alignReactivePortKeys = (deviceIndex: number) => {
+        const pairedKey = findPairedDeviceKey(deviceIndex);
+        if (pairedKey) reactiveVars[deviceIndex].activeDevice = pairedKey;
+
+        const inputKey = findPortKeyById(GridController.availableDeviceInputs(), midiDevices[deviceIndex]?.activeInput?.id);
+        if (inputKey) reactiveVars[deviceIndex].activeInput = inputKey;
+
+        const outputKey = findPortKeyById(GridController.availableDeviceOutputs(), midiDevices[deviceIndex]?.activeOutput?.id);
+        if (outputKey) reactiveVars[deviceIndex].activeOutput = outputKey;
+    };
+
     // Function to get merged device list (available + saved) - used for display values
     const getMergedDeviceList = (deviceType = 'devices') => {
         let availableDevices = {};
@@ -304,6 +334,7 @@
             reactiveVars[deviceIndex].activeInput = midiDevices[deviceIndex]?.activeInput?.name;
             reactiveVars[deviceIndex].activeOutput = midiDevices[deviceIndex]?.activeOutput?.name;
             reactiveVars[deviceIndex].activeConfig = midiDevices[deviceIndex]?.activeConfig?.name;
+            alignReactivePortKeys(deviceIndex);
             // Keep the saved advanced mode setting even when connected
         } else {
             // If device is not connected, ensure activeConfig matches the saved setting
@@ -375,6 +406,7 @@
                         midiDevices[event.deviceID]?.activeOutput?.name;
                     reactiveVars[event.deviceID].activeConfig =
                         midiDevices[event.deviceID]?.activeConfig?.name;
+                    alignReactivePortKeys(event.deviceID);
                 }
                 toast.push(
                     $t("toast.is_now_connected", {

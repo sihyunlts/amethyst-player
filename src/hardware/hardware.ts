@@ -23,6 +23,37 @@ export class GridController {
 
     static callback?: ({}) => unknown
 
+    // Android may expose multiple ports with the same name; suffix duplicates as "Port N".
+    private static getPortKey(baseName: string, duplicateName: boolean, duplicateIndex: number): string
+    {
+        return duplicateName ? `${baseName} (Port ${duplicateIndex})` : baseName;
+    }
+
+    private static getPortNameCounts<T extends { name: string }>(ports: T[]): {[name: string]: number}
+    {
+        const counts: {[name: string]: number} = {};
+        ports.forEach((port) => {
+            const baseName = port.name;
+            counts[baseName] = (counts[baseName] || 0) + 1;
+        });
+        return counts;
+    }
+
+    private static getPortNameIndexes<T extends { name: string }>(ports: T[]): number[]
+    {
+        const indexes: number[] = [];
+        const counters: {[name: string]: number} = {};
+
+        ports.forEach((port, index) => {
+            const baseName = port.name;
+            const duplicateIndex = counters[baseName] || 0;
+            indexes[index] = duplicateIndex;
+            counters[baseName] = duplicateIndex + 1;
+        });
+
+        return indexes;
+    }
+
     constructor(id: number, keyPress: KeyPress, keyRelease: KeyRelease)
     {
         this.id = id;
@@ -60,9 +91,12 @@ export class GridController {
     static updateDeviceList(strict_mode = true, callback = false)
     {
         let devices:{[name:string]: MidiDevice} = {};
+        const matchedPairs: Array<{ key: string; device: MidiDevice }> = [];
 
         for(const input of WebMidi.inputs)
         {
+            let matchedOutput: Output | undefined = undefined;
+
             for(const output of WebMidi.outputs)
             {
                 // Check if input and output names match
@@ -75,29 +109,50 @@ export class GridController {
                     const outputBase = output.name.slice(0, -3); // Remove ' In'
                     isMatch = inputBase === outputBase;
                 }
-                
+
                 if(isMatch)
-                {   
-                    let config: GridDeviceConfig | undefined = undefined;
-                    for (const name in DeviceConfigs) 
-                    {
-                        let config_regex : string = DeviceConfigs[name].midiNameRegex!;
-                        if(input.name.match(config_regex) !== null)
-                        {
-                            console.log(`Output device config found: ${name}`)
-                            config = DeviceConfigs[name];
-                            break;
-                        }
-                    }
-
-                    if(strict_mode && config === undefined)
-                        break;
-
-                    devices[input.name] = new MidiDevice(input.name, input, output, config);
+                {
+                    matchedOutput = output;
                     break;
                 }
             }
+
+            if(!matchedOutput) continue;
+
+            let config: GridDeviceConfig | undefined = undefined;
+            for (const name in DeviceConfigs) 
+            {
+                let config_regex : string = DeviceConfigs[name].midiNameRegex!;
+                if(input.name.match(config_regex) !== null)
+                {
+                    console.log(`Output device config found: ${name}`)
+                    config = DeviceConfigs[name];
+                    break;
+                }
+            }
+
+            if(strict_mode && config === undefined)
+                continue;
+
+            const displayName = input.name;
+            matchedPairs.push({
+                key: displayName,
+                device: new MidiDevice(displayName, input, matchedOutput, config)
+            });
         }
+
+        const nameCounts: {[name: string]: number} = {};
+        matchedPairs.forEach(({ key }) => {
+            nameCounts[key] = (nameCounts[key] || 0) + 1;
+        });
+
+        const deviceIndexesByName: {[name: string]: number} = {};
+        matchedPairs.forEach(({ key, device }) => {
+            const duplicateIndex = deviceIndexesByName[key] || 0;
+            deviceIndexesByName[key] = duplicateIndex + 1;
+            const uniqueKey = GridController.getPortKey(key, (nameCounts[key] || 0) > 1, duplicateIndex);
+            devices[uniqueKey] = device;
+        });
 
         if(callback)
         {
@@ -135,7 +190,13 @@ export class GridController {
     static availableDeviceInputs() : {[name:string]: Input}
     {
         var inputs:{[name:string]: Input} = {}
-        WebMidi.inputs.forEach(input => inputs[input.name] = input);
+        const nameCounts = GridController.getPortNameCounts(WebMidi.inputs);
+        const nameIndexes = GridController.getPortNameIndexes(WebMidi.inputs);
+        WebMidi.inputs.forEach((input, index) => {
+            const baseName = input.name;
+            const key = GridController.getPortKey(baseName, (nameCounts[baseName] || 0) > 1, nameIndexes[index] || 0);
+            inputs[key] = input;
+        });
         return inputs;
     }
 
@@ -143,7 +204,13 @@ export class GridController {
     static availableDeviceOutputs() : {[name:string]: Output}
     {
         var outputs:{[name:string]: Output} = {}
-        WebMidi.outputs.forEach(output => outputs[output.name] = output);
+        const nameCounts = GridController.getPortNameCounts(WebMidi.outputs);
+        const nameIndexes = GridController.getPortNameIndexes(WebMidi.outputs);
+        WebMidi.outputs.forEach((output, index) => {
+            const baseName = output.name;
+            const key = GridController.getPortKey(baseName, (nameCounts[baseName] || 0) > 1, nameIndexes[index] || 0);
+            outputs[key] = output;
+        });
         return outputs;
     }
 
