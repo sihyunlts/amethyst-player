@@ -133,7 +133,7 @@
 </script>
 
 <div class="sidebar {animation ? 'animation' : ''} {mobile ? 'mobile' : ''} {$$props.class} {show ? '' : 'hide'}" style={$$props.style} >
-    <div>
+    <div class="sidebar-content">
         {#if !mobile}
         <div class="sidebar-header">
             <img src="logo-256.png" style="margin-top: 12px;">
@@ -296,8 +296,6 @@
         </div>
     </div>
 
-    <div style="height: 100%"></div>
-
     <div class="sidebar-bottom-block">
         <div class="icon-button" data-tutorial="settings">
             <div on:click={() => dispatch("settings")}>
@@ -324,6 +322,7 @@
         min-width: 350px;
         max-width: 450px;
         width: 33vw;
+        height: 100dvh;
         background-color: var(--bg1, rgb(20, 20, 20));
         box-shadow: 0 0 10px 0.5px black;
         overflow: hidden;
@@ -345,7 +344,7 @@
             max-width: 100vw;
             width: 100vw;
             top: 60px;
-            height: calc(100% - 60px);
+            height: calc(100dvh - 60px);
             box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0);
             --width: 100vw;
         }
@@ -354,6 +353,12 @@
             // left: 0px;
             margin-left: calc(var(--width) * -1);
             box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0);
+        }
+
+        .sidebar-content {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .sidebar-header {
