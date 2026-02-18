@@ -108,6 +108,8 @@
     let currentProject;
     let currentStatus;
     let currentStep = 0;
+    let wakeLock: WakeLockSentinel | null = null;
+    let shouldKeepScreenAwake = false;
     
     $: currentProject = tutorialMode ? {
         projectInfo: fakeProjectInfo, 
@@ -117,6 +119,43 @@
         totalLayers: 8
     } : engine;
     $: currentStatus = tutorialMode && fakeProjectInfo ? "loaded" : projectStatus;
+
+    const requestWakeLock = async () => {
+        if (!browser || !shouldKeepScreenAwake || wakeLock || document.visibilityState !== "visible") return;
+        if (!("wakeLock" in navigator)) return;
+
+        try {
+            wakeLock = await navigator.wakeLock.request("screen");
+            wakeLock.addEventListener("release", () => {
+                wakeLock = null;
+            });
+        } catch (_) {}
+    };
+
+    const releaseWakeLock = async () => {
+        if (!wakeLock) return;
+        try {
+            await wakeLock.release();
+        } catch (_) {}
+        wakeLock = null;
+    };
+
+    const hasConnectedHardwareDevice = (): boolean => {
+        return midiDevices.some((device) => device?.activeInput || device?.activeOutput);
+    };
+
+    const updateShouldKeepScreenAwake = (_status?: string) => {
+        const nextShouldKeepScreenAwake = currentStatus === "loaded" && hasConnectedHardwareDevice();
+        if (nextShouldKeepScreenAwake !== shouldKeepScreenAwake) {
+            shouldKeepScreenAwake = nextShouldKeepScreenAwake;
+            if (shouldKeepScreenAwake) requestWakeLock();
+            else releaseWakeLock();
+        }
+    };
+
+    $: if (browser) {
+        updateShouldKeepScreenAwake(currentStatus);
+    }
 
     const updateDevicesInfo = () => {
         virtualDevicesInfo = [];
@@ -408,6 +447,7 @@
                         midiDevices[event.deviceID]?.activeConfig?.name;
                     alignReactivePortKeys(event.deviceID);
                 }
+                updateShouldKeepScreenAwake();
                 toast.push(
                     $t("toast.is_now_connected", {
                         device_name: midiDeviceInfos[event.deviceID].name,
@@ -445,6 +485,7 @@
                     reactiveVars[event.deviceID].activeOutput = undefined;
                     reactiveVars[event.deviceID].activeConfig = undefined;
                 }
+                updateShouldKeepScreenAwake();
                 break;
 
             case "connected":
@@ -1071,6 +1112,20 @@
             }, 1000 / 30);
         }
     );
+
+    onMount(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible" && shouldKeepScreenAwake) {
+                requestWakeLock();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            releaseWakeLock();
+        };
+    });
 
     afterUpdate(() => {
         updateDevicesInfo();
