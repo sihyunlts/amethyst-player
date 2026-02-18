@@ -1,6 +1,7 @@
 <script lang="ts">
     import CaretDownIcon from "carbon-icons-svelte/lib/CaretDown.svelte";
     import { createEventDispatcher } from 'svelte';
+    import { onDestroy, tick } from "svelte";
 
     export let options: string[];
     export let value: string | undefined;
@@ -10,10 +11,93 @@
 
     let index:number;
 
-    let showOptions: boolean;
+    let showOptions = false;
     let dropdownButton: HTMLDivElement;
+    let dropdownOptions: HTMLDivElement;
+    let optionsStyle = "";
+
+    // Viewport-aware spacing for dropdown placement.
+    const viewportPadding = 24;
+    const optionsGap = 4;
+    const minVisibleOptionsHeight = 120;
 
     let dispatch = createEventDispatcher();
+
+    function addViewportListeners() {
+        window.addEventListener("resize", updateOptionsPosition);
+        // Capture scroll from nested scroll containers.
+        document.addEventListener("scroll", updateOptionsPosition, true);
+    }
+
+    function removeViewportListeners() {
+        window.removeEventListener("resize", updateOptionsPosition);
+        document.removeEventListener("scroll", updateOptionsPosition, true);
+    }
+
+    function closeOptions() {
+        showOptions = false;
+        removeViewportListeners();
+    }
+
+    async function toggleOptions() {
+        showOptions = !showOptions;
+
+        if (!showOptions) {
+            removeViewportListeners();
+            return;
+        }
+
+        addViewportListeners();
+
+        // Wait until options are mounted so measurements are accurate.
+        await tick();
+        updateOptionsPosition();
+    }
+
+    function updateOptionsPosition() {
+        if (!showOptions || !dropdownButton || !dropdownOptions) return;
+
+        const buttonRect = dropdownButton.getBoundingClientRect();
+        const optionsRect = dropdownOptions.getBoundingClientRect();
+        const viewportWidth = document.documentElement.clientWidth;
+        const viewportHeight = document.documentElement.clientHeight;
+
+        const spaceBelow = viewportHeight - buttonRect.bottom - optionsGap - viewportPadding;
+        const spaceAbove = buttonRect.top - optionsGap - viewportPadding;
+        // If bottom space is tight, open upward.
+        const openUpward = spaceBelow < 220 && spaceAbove > spaceBelow;
+
+        const maxPanelHeight = Math.max(80, viewportHeight - viewportPadding * 2);
+        const availableHeight = Math.min(
+            maxPanelHeight,
+            Math.max(minVisibleOptionsHeight, openUpward ? spaceAbove : spaceBelow)
+        );
+        const visibleHeight = Math.min(optionsRect.height, availableHeight);
+
+        let top = openUpward
+            ? buttonRect.top - optionsGap - visibleHeight
+            : buttonRect.bottom + optionsGap;
+
+        top = Math.max(
+            viewportPadding,
+            Math.min(top, viewportHeight - visibleHeight - viewportPadding)
+        );
+
+        const minWidth = buttonRect.width;
+        const optionsWidth = Math.max(minWidth, optionsRect.width);
+        let left = buttonRect.left;
+        if (left + optionsWidth > viewportWidth - viewportPadding) {
+            left = viewportWidth - optionsWidth - viewportPadding;
+        }
+        left = Math.max(viewportPadding, left);
+
+        optionsStyle = [
+            `top: ${Math.round(top)}px`,
+            `left: ${Math.round(left)}px`,
+            `min-width: ${Math.round(minWidth)}px`,
+            `max-height: ${Math.floor(availableHeight)}px`
+        ].join("; ");
+    }
 
     function clickOutsideOptions(node: HTMLDivElement) {
         const handleClick = (event: MouseEvent) => {
@@ -25,7 +109,7 @@
 
             // Close the dropdown if we click anywhere else.
             if (!node.contains(target)) {
-                showOptions = false
+                closeOptions();
             }
         };
 
@@ -37,10 +121,15 @@
             }
         };
     }
+
+    onDestroy(() => {
+        // Defensive cleanup for unmount while open.
+        removeViewportListeners();
+    });
 </script>
 
 <div style="display: flex; flex-direction: column;">
-    <div class="dropdown-select-body" bind:this={dropdownButton} on:click={() => showOptions = !showOptions}>
+    <div class="dropdown-select-body" bind:this={dropdownButton} on:click={toggleOptions}>
         <div class="left-portion">
             <span>{$t(value !== undefined ? value : placeholder)}</span>
         </div>
@@ -51,11 +140,16 @@
     </div>
 
     {#if showOptions}
-        <div class="dropdown-select-options" use:clickOutsideOptions>
+        <div
+            class="dropdown-select-options"
+            bind:this={dropdownOptions}
+            style={optionsStyle}
+            use:clickOutsideOptions
+        >
             {#if placeholder}
                 <div class="dropdown-option" on:click={() => {
                 value = undefined;
-                showOptions = false;
+                closeOptions();
                 index = NaN;
                 dispatch("change", {value:value, index:index});
             }}>
@@ -65,7 +159,7 @@
             {#each options as option}
                 <div class="dropdown-option" on:click={() => {
                     value = option;
-                    showOptions = false;
+                    closeOptions();
                     index = options.indexOf(option);
                     dispatch("change", {value:value, index:index});
                 }}>
@@ -132,7 +226,8 @@
         padding: 10px;
         
         position: fixed;
-        margin-top: 38px;
+        overflow-y: auto;
+        overflow-x: hidden;
 
         .dropdown-option {
             width: 100%;
