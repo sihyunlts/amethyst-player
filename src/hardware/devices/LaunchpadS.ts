@@ -27,7 +27,7 @@ const config: GridDeviceConfig = {
 
     noteToXY(note)
     {
-      if(note >= 0 && note <= 103 && note % 16 <= 7)
+      if(note >= 0 && note <= 120 && note % 16 <= 8)
       {
         return [note % 16, Math.floor(note / 16)];
       }

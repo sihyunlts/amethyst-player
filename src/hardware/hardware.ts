@@ -438,7 +438,8 @@ export class GridController {
                 ];
             }
             let deviceKeyID = this.activeConfig.keymap?.[keyID[1]]?.[keyID[0]];
-            if(deviceKeyID) {
+            const hasDeviceKeyID = deviceKeyID !== undefined && !(typeof deviceKeyID === "number" && Number.isNaN(deviceKeyID));
+            if(hasDeviceKeyID) {
                 this.setColorOnDevice(deviceKeyID, color);    
             }
         }
