@@ -4,6 +4,7 @@ import LaunchpadX from "./LaunchpadX"
 import LaunchpadProMK2 from "./LaunchpadProMK2";
 import LaunchpadProMK2CFW from "./LaunchpadProMK2CFW";
 import LaunchpadProMK3 from "./LaunchpadProMK3";
+import LaunchpadS from "./LaunchpadS";
 import LaunchpadMiniMK3 from "./LaunchpadMiniMK3";
 import MidiFighter64 from "./MidiFighter64";
 
@@ -14,6 +15,7 @@ export default {
   [LaunchpadProMK2.name]: LaunchpadProMK2,
   [LaunchpadProMK2CFW.name]: LaunchpadProMK2CFW,
   [LaunchpadProMK3.name]: LaunchpadProMK3,
+  [LaunchpadS.name]: LaunchpadS,
   [LaunchpadMiniMK3.name]: LaunchpadMiniMK3,
   [MidiFighter64.name]: MidiFighter64,
 };
