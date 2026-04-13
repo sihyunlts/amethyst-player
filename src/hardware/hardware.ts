@@ -4,6 +4,7 @@ import { KeyType, MidiDevice, type DeviceKeyID, type GridDeviceConfig } from "./
 import type {KeyID, DeviceInfo} from "../types/devices";
 import type {KeyPress, KeyRelease} from "../engine/CanvasAPI"
 import { ColorType, Color } from "../types/color"
+import { resolveLaunchpadSColor } from "../components/devices/NovationRGColors";
 
 
 import { WebMidi } from "webmidi";
@@ -449,6 +450,10 @@ export class GridController {
     {
         if(this.activeConfig === undefined)
             return;
+        if (this.activeConfig.name === "Launchpad S") {
+            const { hardwarePaletteIndex } = resolveLaunchpadSColor(color);
+            color = new Color(ColorType.Palette, ["classic", hardwarePaletteIndex]);
+        }
         if(color.type === ColorType.Palette)
         {
             // Use custom palette channel if set, otherwise fall back to config
